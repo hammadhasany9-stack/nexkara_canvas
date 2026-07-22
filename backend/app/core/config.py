@@ -50,6 +50,23 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     mail_from: str = "no-reply@nexkara.com"
 
+    # --- Object storage ---
+    # "minio" for the S3-compatible service (docker-compose), or "local" for a
+    # filesystem backend so you can run the API without MinIO in dev.
+    storage_backend: str = "minio"  # minio | local
+    local_storage_dir: str = "./storage_data"
+
+    # --- MinIO / S3 ---
+    minio_endpoint: str = "minio:9000"
+    minio_access_key: str = "nexkara"
+    minio_secret_key: str = "nexkara_dev_pw"
+    minio_bucket: str = "prototypes"
+    minio_secure: bool = False
+    minio_public_endpoint: str = ""  # browser-facing host for presigned URLs
+
+    # --- Uploads ---
+    max_upload_bytes: int = 5 * 1024 * 1024  # 5 MB
+
     @property
     def async_database_url(self) -> str:
         if self.database_url:

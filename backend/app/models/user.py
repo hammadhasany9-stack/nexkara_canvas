@@ -30,6 +30,8 @@ class User(Base):
         SAEnum(OrgRole, name="org_role"), default=OrgRole.member
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # For the Users admin tab: "active" once they've signed in, else "invited".
+    invite_status: Mapped[str] = mapped_column(String(20), default="active")
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

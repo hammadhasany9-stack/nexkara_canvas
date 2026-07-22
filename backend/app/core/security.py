@@ -14,7 +14,7 @@ from app.core.config import settings
 # Argon2id with tuned cost. argon2-cffi defaults are Argon2id already.
 _ph = PasswordHasher(time_cost=3, memory_cost=64 * 1024, parallelism=2)
 
-TokenPurpose = Literal["session", "device_trust", "pw_reset"]
+TokenPurpose = Literal["session", "device_trust", "pw_reset", "share"]
 
 
 def hash_password(password: str) -> str:

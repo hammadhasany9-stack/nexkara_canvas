@@ -36,3 +36,7 @@ pgdata/
 redisdata/
 caddy_data/
 caddy_config/
+
+# Local dev object storage
+storage_data/
+backend/storage_data/

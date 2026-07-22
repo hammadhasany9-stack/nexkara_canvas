@@ -1,62 +1,68 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { apiGet, ApiError } from "@/lib/api";
-import { Logo } from "@/components/auth/Logo";
-import { ThemeToggle } from "@/components/auth/ThemeToggle";
-import { LogoutButton } from "@/components/auth/LogoutButton";
-
-type Me = { email: string; display_name: string; org_role: string };
+import { useDashboard } from "@/store/useDashboard";
+import { Topbar } from "@/components/dashboard/Topbar";
+import { Sidebar } from "@/components/dashboard/Sidebar";
+import { Toolbar } from "@/components/dashboard/Toolbar";
+import { PrototypeCard } from "@/components/dashboard/PrototypeCard";
+import { PrototypeRow } from "@/components/dashboard/PrototypeRow";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { UploadModal } from "@/components/dashboard/UploadModal";
+import { ShareModal } from "@/components/dashboard/ShareModal";
+import { SettingsModal } from "@/components/dashboard/SettingsModal";
+import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
+import { RenameModal } from "@/components/dashboard/RenameModal";
+import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [me, setMe] = React.useState<Me | null>(null);
+  const { view, query, prototypes, loading, loadMe, refresh, loadNotifications, openSettings } =
+    useDashboard();
 
   React.useEffect(() => {
-    apiGet<Me>("/auth/me")
-      .then(setMe)
-      .catch((e) => {
-        if (e instanceof ApiError && e.status === 401) router.push("/login");
-      });
-  }, [router]);
+    loadMe();
+    refresh();
+    loadNotifications();
+    // deep-link: /dashboard?settings=1 (from the prototype's settings bridge)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("settings")) openSettings("profile");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <main className="min-h-screen bg-bg">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
-        <Logo />
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <LogoutButton />
-        </div>
-      </header>
+    <div className="min-h-screen bg-bg">
+      <Topbar />
+      <NotificationsPanel />
+      <div className="flex">
+        <Sidebar />
+        <main className="min-w-0 flex-1 p-6 lg:p-8">
+          <Toolbar />
 
-      <div className="mx-auto max-w-3xl px-6 py-16">
-        <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-600">
-          Signed in
-        </span>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-text-strong">
-          Welcome to Canvas{me ? `, ${me.display_name}` : ""}.
-        </h1>
-        <p className="mt-3 text-text-muted">
-          Authentication is wired up end-to-end. The dashboard (projects,
-          upload, sharing, comments) lands in the next plan.
-        </p>
-        {me && (
-          <dl className="mt-8 grid max-w-sm gap-3 rounded-card border border-border bg-surface p-6 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-text-muted">Email</dt>
-              <dd className="font-medium text-text-body">{me.email}</dd>
+          {loading && prototypes.length === 0 ? (
+            <div className="py-20 text-center text-sm text-text-muted">Loading…</div>
+          ) : prototypes.length === 0 ? (
+            <EmptyState hasQuery={!!query} />
+          ) : view === "grid" ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4">
+              {prototypes.map((p) => (
+                <PrototypeCard key={p.id} p={p} />
+              ))}
             </div>
-            <div className="flex justify-between">
-              <dt className="text-text-muted">Role</dt>
-              <dd className="font-medium text-text-body capitalize">
-                {me.org_role}
-              </dd>
+          ) : (
+            <div className="grid gap-2">
+              {prototypes.map((p) => (
+                <PrototypeRow key={p.id} p={p} />
+              ))}
             </div>
-          </dl>
-        )}
+          )}
+        </main>
       </div>
-    </main>
+
+      <UploadModal />
+      <ShareModal />
+      <SettingsModal />
+      <RenameModal />
+      <ConfirmDialog />
+    </div>
   );
 }

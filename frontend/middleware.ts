@@ -8,7 +8,8 @@ export function middleware(req: NextRequest) {
   const hasSession = req.cookies.has(SESSION_COOKIE);
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/dashboard") && !hasSession) {
+  const isProtected = pathname.startsWith("/dashboard") || pathname.startsWith("/p/");
+  if (isProtected && !hasSession) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -24,5 +25,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/login", "/dashboard/:path*"],
+  matcher: ["/login", "/dashboard/:path*", "/p/:path*"],
 };
