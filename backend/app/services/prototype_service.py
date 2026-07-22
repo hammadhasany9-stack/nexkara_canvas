@@ -31,10 +31,14 @@ async def create_prototype(
     type_: PrototypeType,
     layouts: list[str],
     html: bytes,
+    description: str | None = None,
+    source_url: str | None = None,
 ) -> Prototype:
     proto = Prototype(
         owner_id=owner.id,
         name=name,
+        description=description,
+        source_url=source_url,
         type=type_,
         layouts=layouts,
         current_version=1,
@@ -158,6 +162,8 @@ async def to_out(db: AsyncSession, user: User, proto: Prototype) -> PrototypeOut
     return PrototypeOut(
         id=proto.id,
         name=proto.name,
+        description=proto.description,
+        source_url=proto.source_url,
         type=proto.type.value,
         team=proto.team,
         layouts=list(proto.layouts or []),

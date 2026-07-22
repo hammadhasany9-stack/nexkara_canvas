@@ -33,6 +33,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("name", sa.String(length=200), nullable=False),
+        sa.Column("description", sa.String(length=2000), nullable=True),
+        sa.Column("source_url", sa.String(length=500), nullable=True),
         sa.Column(
             "type",
             sa.Enum("web", "app", name="prototype_type"),

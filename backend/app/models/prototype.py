@@ -40,6 +40,8 @@ class Prototype(Base):
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
     name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     type: Mapped[PrototypeType] = mapped_column(
         SAEnum(PrototypeType, name="prototype_type"), default=PrototypeType.web
     )

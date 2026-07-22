@@ -9,6 +9,8 @@ export type AccessLevel = "viewer" | "commenter" | "editor" | "manager";
 export interface Prototype {
   id: string;
   name: string;
+  description?: string | null;
+  source_url?: string | null;
   type: "web" | "app";
   team: string;
   layouts: string[];

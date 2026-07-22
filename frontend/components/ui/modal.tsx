@@ -9,6 +9,7 @@ export function Modal({
   onClose,
   title,
   subtitle,
+  eyebrow,
   children,
   footer,
   size = "md",
@@ -17,6 +18,7 @@ export function Modal({
   onClose: () => void;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  eyebrow?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg";
@@ -48,6 +50,11 @@ export function Modal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-border p-5">
           <div>
+            {eyebrow && (
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-brand-600">
+                {eyebrow}
+              </p>
+            )}
             <h2 className="text-lg font-bold text-text-strong">{title}</h2>
             {subtitle && <p className="mt-0.5 text-sm text-text-muted">{subtitle}</p>}
           </div>

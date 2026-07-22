@@ -34,6 +34,8 @@ class PersonOut(BaseModel):
 class PrototypeOut(BaseModel):
     id: uuid.UUID
     name: str
+    description: str | None = None
+    source_url: str | None = None
     type: str
     team: str
     layouts: list[str]
@@ -102,6 +104,17 @@ class ProfileUpdate(BaseModel):
     display_name: str = Field(min_length=1, max_length=120)
 
 
+def validate_settings_password(value: str) -> str:
+    """Rules shown on the Settings → Change Password screen."""
+    import re as _re
+
+    if len(value) < 8 or not _re.search(r"[A-Z]", value) or not _re.search(r"\d", value):
+        raise ValueError(
+            "Password must be at least 8 characters and include an uppercase letter and a number."
+        )
+    return value
+
+
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str
@@ -109,7 +122,7 @@ class PasswordChange(BaseModel):
     @field_validator("new_password")
     @classmethod
     def _rules(cls, v: str) -> str:
-        return validate_password_rules(v)
+        return validate_settings_password(v)
 
 
 # --- Notifications ---

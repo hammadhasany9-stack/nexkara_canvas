@@ -73,6 +73,8 @@ async def create_prototype(
     name: str = Form(...),
     type: str = Form("web"),
     layouts: str = Form("desktop,tablet,mobile"),
+    description: str = Form(""),
+    source_url: str = Form(""),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> PrototypeOut:
@@ -81,7 +83,9 @@ async def create_prototype(
     data = await _read_upload(file)
     proto_type = PrototypeType.app if type.lower() == "app" else PrototypeType.web
     proto = await svc.create_prototype(
-        db, user, name.strip(), proto_type, _parse_layouts(layouts), data
+        db, user, name.strip(), proto_type, _parse_layouts(layouts), data,
+        description=description.strip() or None,
+        source_url=source_url.strip() or None,
     )
     proto, _ = await svc.get_with_membership(db, user, proto.id)
     return await svc.to_out(db, user, proto)

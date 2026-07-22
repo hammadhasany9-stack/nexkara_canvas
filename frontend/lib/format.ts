@@ -9,6 +9,13 @@ export function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString();
 }
 
+export function initialsOf(name: string): string {
+  const p = name.split(" ").filter(Boolean);
+  if (!p.length) return "?";
+  if (p.length === 1) return p[0].slice(0, 2).toUpperCase();
+  return (p[0][0] + p[p.length - 1][0]).toUpperCase();
+}
+
 const AVATAR_HUES = [200, 160, 12, 280, 340, 100];
 
 /** Deterministic color for a person/prototype id. */
