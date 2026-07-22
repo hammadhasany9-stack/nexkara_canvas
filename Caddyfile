@@ -1,0 +1,31 @@
+# Nexkara Canvas — reverse proxy.
+# Single origin: the browser talks to Caddy, which routes /api to FastAPI and
+# everything else to the Next.js app. This keeps auth cookies first-party.
+#
+# Local dev: browse http://localhost (Caddy serves plain HTTP on :80).
+# Production: replace `:80` with your domain and Caddy auto-provisions HTTPS.
+
+:80 {
+	# API — strip the /api prefix before handing off to FastAPI.
+	handle_path /api/* {
+		reverse_proxy api:8000
+	}
+
+	# Everything else -> Next.js.
+	handle {
+		reverse_proxy web:3000
+	}
+
+	encode gzip zstd
+}
+
+# --- Production template (uncomment + set your domain) ---
+# canvas.nexkara.com {
+# 	handle_path /api/* {
+# 		reverse_proxy api:8000
+# 	}
+# 	handle {
+# 		reverse_proxy web:3000
+# 	}
+# 	encode gzip zstd
+# }

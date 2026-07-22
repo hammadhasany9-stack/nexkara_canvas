@@ -1,0 +1,9 @@
+# Org-level policy. Resource-level rules (per-prototype sharing) arrive with the
+# Dashboard/Viewer screens; for now admins do everything, members read + upload.
+p, admin, *, *
+p, member, prototype, read
+p, member, prototype, create
+p, member, comment, create
+
+# Role hierarchy: admin inherits member.
+g, admin, member
