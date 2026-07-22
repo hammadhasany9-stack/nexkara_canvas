@@ -82,7 +82,7 @@ export function AuthFlow() {
                 <button
                   type="button"
                   onClick={() => s.goto("forgot")}
-                  className="text-xs font-medium text-brand-600 hover:text-brand-700"
+                  className="text-xs font-semibold text-brand-600 underline underline-offset-2 hover:text-brand-700"
                 >
                   Forgot?
                 </button>
@@ -90,7 +90,7 @@ export function AuthFlow() {
               <PasswordField
                 id="password"
                 autoComplete="current-password"
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 value={s.password}
                 onChange={(e) => s.set({ password: e.target.value })}
               />

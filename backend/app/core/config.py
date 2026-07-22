@@ -38,9 +38,9 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:3000"
 
     # --- Seed admin ---
-    seed_admin_email: str = "alex.rivera@nexkara.com"
-    seed_admin_name: str = "Alex Rivera"
-    seed_admin_password: str = "Password123!"
+    seed_admin_email: str = "hammad@medzah.com"
+    seed_admin_name: str = "Hammad Hasany"
+    seed_admin_password: str = "admin123"
 
     # --- Mail ---
     mail_backend: str = "console"  # console | smtp

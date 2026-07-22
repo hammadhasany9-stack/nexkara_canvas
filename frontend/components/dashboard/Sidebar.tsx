@@ -52,36 +52,31 @@ export function Sidebar() {
           <span className="flex items-center gap-3">
             <Bell size={18} /> Notifications
           </span>
-          <span className="flex items-center gap-1.5">
-            {unread > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">
-                {unread}
-              </span>
-            )}
-          </span>
+          {unread > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">
+              {unread}
+            </span>
+          )}
         </button>
       </nav>
 
-      {people.length > 0 && (
-        <div className="mt-4">
-          <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
-            Shared users
-          </p>
+      <div className="mt-4">
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
+          Shared users
+        </p>
+        {people.length > 0 ? (
           <div className="grid gap-0.5">
-            {people.slice(0, 6).map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between rounded-[10px] px-3 py-2 text-sm"
-              >
-                <span className="flex items-center gap-2.5">
-                  <Avatar person={p} size={26} />
-                  <span className="text-text-body">{p.display_name}</span>
-                </span>
+            {people.slice(0, 8).map((p) => (
+              <div key={p.id} className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm">
+                <Avatar person={p} size={26} />
+                <span className="truncate text-text-body">{p.display_name}</span>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="px-3 text-xs text-text-faint">No collaborators yet</p>
+        )}
+      </div>
     </aside>
   );
 }
