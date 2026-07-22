@@ -7,6 +7,7 @@ from app.models.prototype import (
     PrototypeVersion,
 )
 from app.models.notification import Notification
+from app.models.comment import Comment, CommentReply
 
 __all__ = [
     "User",
@@ -17,4 +18,6 @@ __all__ = [
     "PrototypeType",
     "AccessLevel",
     "Notification",
+    "Comment",
+    "CommentReply",
 ]

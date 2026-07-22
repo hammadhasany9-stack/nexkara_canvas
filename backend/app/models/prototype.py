@@ -76,6 +76,7 @@ class PrototypeVersion(Base):
         ForeignKey("prototypes.id", ondelete="CASCADE"), index=True
     )
     version: Mapped[int] = mapped_column(Integer)
+    label: Mapped[str | None] = mapped_column(String(200), nullable=True)
     storage_key: Mapped[str] = mapped_column(String(400))
     byte_size: Mapped[int] = mapped_column(BigInteger, default=0)
     created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
