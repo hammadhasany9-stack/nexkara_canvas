@@ -34,4 +34,7 @@ async def change_password(
     if not verify_password(body.current_password, user.password_hash):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Your current password isn't right.")
     await auth_service.set_password(db, user, body.new_password)
+    if user.must_change_password:
+        user.must_change_password = False
+        await db.commit()
     return MessageOut(status="updated")

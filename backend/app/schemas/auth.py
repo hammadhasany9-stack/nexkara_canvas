@@ -93,6 +93,7 @@ class UserOut(BaseModel):
     email: EmailStr
     display_name: str
     org_role: str
+    must_change_password: bool = False
 
     model_config = {"from_attributes": True}
 

@@ -25,7 +25,7 @@ const TITLES: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const { view, setView, section, query, prototypes, loading, loadMe, refresh, loadNotifications, openSettings } =
+  const { view, setView, section, query, prototypes, loading, me, loadMe, refresh, loadNotifications, openSettings } =
     useDashboard();
 
   React.useEffect(() => {
@@ -35,6 +35,11 @@ export default function DashboardPage() {
     if (new URLSearchParams(window.location.search).get("settings")) openSettings("profile");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Users given a temporary password must change it before continuing.
+  React.useEffect(() => {
+    if (me?.must_change_password) openSettings("password");
+  }, [me, openSettings]);
 
   const title = query ? `Results for “${query}”` : TITLES[section] ?? "Home";
 

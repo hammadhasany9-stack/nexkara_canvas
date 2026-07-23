@@ -26,9 +26,50 @@ async def test_admin_can_list_and_create_users(admin_client):
 async def test_create_user_weak_password_422(admin_client):
     r = await admin_client.post(
         "/users",
-        json={"email": "w@nexkara.com", "display_name": "W", "org_role": "member", "password": "weak"},
+        json={"email": "w@nexkara.com", "display_name": "W", "org_role": "member",
+              "access_method": "temp_password", "password": "weak"},
     )
     assert r.status_code == 422
+
+
+async def test_temp_password_user_must_change(admin_client):
+    r = await admin_client.post(
+        "/users",
+        json={"email": "temp@nexkara.com", "display_name": "Temp", "org_role": "member",
+              "access_method": "temp_password", "password": "Temp1234"},
+    )
+    assert r.status_code == 201 and r.json()["invite_status"] == "invited"
+
+
+async def test_invite_flow(admin_client):
+    from app.core.security import create_invite_token
+    from app.services import auth_service
+
+    # admin invites a user (no password)
+    created = await admin_client.post(
+        "/users",
+        json={"email": "invitee@nexkara.com", "display_name": "Invitee", "org_role": "member",
+              "access_method": "invite"},
+    )
+    assert created.status_code == 201
+    uid = created.json()["id"]
+
+    token = create_invite_token(uid)
+    # validate returns who the invite is for
+    info = await admin_client.get(f"/invite/validate?token={token}")
+    assert info.status_code == 200 and info.json()["email"] == "invitee@nexkara.com"
+
+    # weak password rejected
+    weak = await admin_client.post("/invite/accept", json={"token": token, "new_password": "weak"})
+    assert weak.status_code == 422
+
+    # accept sets the password
+    ok = await admin_client.post("/invite/accept", json={"token": token, "new_password": "NewPass1!"})
+    assert ok.status_code == 200
+
+    # bad token rejected
+    bad = await admin_client.get("/invite/validate?token=nope")
+    assert bad.status_code == 400
 
 
 async def test_duplicate_email_409(admin_client):

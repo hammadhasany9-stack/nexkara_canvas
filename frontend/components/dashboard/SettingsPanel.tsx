@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, LogOut, Minus, RefreshCw, Settings, ShieldCheck, User, UserPlus, Users } from "lucide-react";
+import { ChevronLeft, LogOut, Mail, Minus, RefreshCw, Settings, ShieldCheck, User, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
 import type { AdminUser } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
 import { Modal } from "@/components/ui/modal";
 import { Banner } from "@/components/auth/Banner";
+import { PasswordField } from "@/components/auth/PasswordField";
 import { Avatar } from "@/components/ui/avatar";
 import { initialsOf } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -101,6 +102,8 @@ function ProfileTab({ onSaved }: { onSaved: () => void }) {
 }
 
 function PasswordTab() {
+  const me = useDashboard((s) => s.me);
+  const loadMe = useDashboard((s) => s.loadMe);
   const [cur, setCur] = React.useState("");
   const [next, setNext] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
@@ -120,11 +123,15 @@ function PasswordTab() {
     try {
       await apiPost("/account/password", { current_password: cur, new_password: next });
       setOk("Password updated."); setCur(""); setNext(""); setConfirm("");
+      loadMe();
     } catch (e) { setError(e instanceof ApiError ? e.message : "Could not update password."); }
   };
 
   return (
     <div className="max-w-3xl">
+      {me?.must_change_password && (
+        <div className="mb-5"><Banner kind="error">You&apos;re using a temporary password. Set a new one to continue.</Banner></div>
+      )}
       <p className="mb-6 text-text-muted">Choose a strong password you don&apos;t use elsewhere. You&apos;ll stay signed in on this device.</p>
       <div className="rounded-card border border-border bg-[var(--surface)]">
         <div className="grid gap-6 p-6 md:grid-cols-[1fr_240px]">
@@ -132,11 +139,11 @@ function PasswordTab() {
             {error && <Banner kind="error">{error}</Banner>}
             {ok && <Banner kind="info">{ok}</Banner>}
             <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Current password</span>
-              <input type="password" value={cur} onChange={(e) => setCur(e.target.value)} className={inputCls} /></label>
+              <PasswordField value={cur} onChange={(e) => setCur(e.target.value)} className="bg-[var(--surface-subtle)]" autoComplete="current-password" /></label>
             <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">New password</span>
-              <input type="password" value={next} onChange={(e) => { setNext(e.target.value); setOk(""); }} placeholder="At least 8 characters" className={inputCls} /></label>
+              <PasswordField value={next} onChange={(e) => { setNext(e.target.value); setOk(""); }} placeholder="At least 8 characters" className="bg-[var(--surface-subtle)]" autoComplete="new-password" /></label>
             <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Confirm new password</span>
-              <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Re-enter new password" className={inputCls} /></label>
+              <PasswordField value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Re-enter new password" className="bg-[var(--surface-subtle)]" autoComplete="new-password" /></label>
           </div>
           <div className="border-l border-border pl-6">
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-text-faint">Requirements</p>
@@ -202,34 +209,81 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [role, setRole] = React.useState<"member" | "admin">("member");
+  const [method, setMethod] = React.useState<"invite" | "temp">("invite");
   const [pw, setPw] = React.useState("");
   const [error, setError] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+
   const generate = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
     const arr = new Uint32Array(14); crypto.getRandomValues(arr);
     setPw("Nx" + Array.from(arr, (n) => chars[n % chars.length]).join("") + "9!");
   };
+
   const submit = async () => {
-    try { await apiPost("/users", { email, display_name: name, org_role: role, password: pw }); onAdded(); }
-    catch (e) { setError(e instanceof ApiError ? e.message : "Could not add user."); }
+    setLoading(true); setError("");
+    try {
+      await apiPost("/users", {
+        email, display_name: name, org_role: role,
+        access_method: method === "invite" ? "invite" : "temp_password",
+        password: method === "temp" ? pw : undefined,
+      });
+      onAdded();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Could not add user.");
+    } finally { setLoading(false); }
   };
+
+  const ready = name && email && (method === "invite" || pw);
+  const submitLabel = method === "invite" ? "Send invite" : "Add & send invite";
+
   return (
-    <Modal open onClose={onClose} title="Add user" size="sm"
+    <Modal open onClose={onClose} title="Add a user" size="sm"
       footer={<><button onClick={onClose} className="rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body">Cancel</button>
-        <button onClick={submit} disabled={!name || !email || !pw} className="rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">Add user</button></>}>
-      <div className="grid gap-3">
+        <button onClick={submit} disabled={!ready || loading} className="rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{loading ? "Working…" : submitLabel}</button></>}>
+      <div className="grid gap-4">
         {error && <Banner kind="error">{error}</Banner>}
-        <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Name</span><input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
-        <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} /></label>
+        <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Name</span><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jordan Lee" className={inputCls} /></label>
+        <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jordan@company.com" className={inputCls} /></label>
+
         <div className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Role</span>
           <div className="flex gap-2">{(["member", "admin"] as const).map((r) => (
             <button key={r} type="button" onClick={() => setRole(r)} className={cn("rounded-full border px-4 py-1.5 text-sm font-medium capitalize", role === r ? "border-brand-600 text-brand-600" : "border-border text-text-muted")}>{r}</button>))}
           </div></div>
-        <div className="grid gap-1.5">
-          <div className="flex items-center justify-between"><span className="text-sm font-medium text-text-body">Password</span>
-            <button type="button" onClick={generate} className="text-xs font-medium text-brand-600 hover:text-brand-700">Generate</button></div>
-          <input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Set a strong password" className={inputCls} /></div>
+
+        <div className="grid gap-1.5"><span className="text-sm font-medium text-text-body">How should they get access?</span>
+          <div className="flex gap-2">
+            <Pill active={method === "invite"} onClick={() => setMethod("invite")}>Send invite email</Pill>
+            <Pill active={method === "temp"} onClick={() => setMethod("temp")}>Set temporary password</Pill>
+          </div>
+        </div>
+
+        {method === "temp" && (
+          <div className="grid gap-1.5">
+            <div className="flex items-center justify-between"><span className="text-sm font-medium text-text-body">Temporary password</span>
+              <button type="button" onClick={generate} className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700"><RefreshCw size={12} /> Generate</button></div>
+            <input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Set an initial password" className={inputCls} />
+          </div>
+        )}
+
+        <div className="flex items-start gap-2.5 rounded-input border border-border bg-[var(--surface-subtle)] p-3 text-xs text-text-muted">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-[var(--surface)] text-brand-600"><Mail size={15} /></span>
+          {method === "invite" ? (
+            <span>We&apos;ll email <b className="text-text-body">an invite link</b> to this address. When they open it, they set their own password — no temporary password needed.</span>
+          ) : (
+            <span>An invite email with sign-in details will be sent to this address. The user must change this temporary password on first sign-in.</span>
+          )}
+        </div>
       </div>
     </Modal>
+  );
+}
+
+function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick}
+      className={cn("rounded-full border px-4 py-1.5 text-sm font-medium", active ? "border-brand-600 text-brand-600" : "border-border text-text-muted hover:text-text-strong")}>
+      {children}
+    </button>
   );
 }

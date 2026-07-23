@@ -32,6 +32,8 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     # For the Users admin tab: "active" once they've signed in, else "invited".
     invite_status: Mapped[str] = mapped_column(String(20), default="active")
+    # Set when an admin issues a temporary password; cleared on first change.
+    must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

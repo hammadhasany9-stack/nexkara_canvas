@@ -90,9 +90,22 @@ class UserCreate(BaseModel):
     email: EmailStr
     display_name: str = Field(min_length=1, max_length=120)
     org_role: Literal["member", "admin"] = "member"
-    password: str
+    # "invite" -> email an invite link (user sets their own password).
+    # "temp_password" -> admin sets a temporary password, user must change it.
+    access_method: Literal["invite", "temp_password"] = "invite"
+    password: str | None = None
 
-    @field_validator("password")
+
+class InviteInfoOut(BaseModel):
+    email: EmailStr
+    display_name: str
+
+
+class InviteAccept(BaseModel):
+    token: str
+    new_password: str
+
+    @field_validator("new_password")
     @classmethod
     def _rules(cls, v: str) -> str:
         return validate_password_rules(v)

@@ -48,6 +48,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="")
 app.include_router(prototypes.router, prefix="")
 app.include_router(users_admin.router, prefix="")
+app.include_router(users_admin.invite_router, prefix="")
 app.include_router(account.router, prefix="")
 app.include_router(notifications.router, prefix="")
 app.include_router(viewer.router, prefix="")

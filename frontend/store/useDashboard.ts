@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { apiGet } from "@/lib/api";
 import type { AdminUser, Notification, Prototype, Section } from "@/lib/types";
 
-type Me = { id: string; email: string; display_name: string; org_role: string };
+type Me = { id: string; email: string; display_name: string; org_role: string; must_change_password?: boolean };
 type Counts = Record<Section, number>;
 
 interface DashboardState {
