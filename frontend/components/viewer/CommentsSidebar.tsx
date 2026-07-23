@@ -8,31 +8,49 @@ import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 export function CommentsSidebar() {
-  const { comments, version, filter, setFilter } = useViewer();
+  const { comments, version, filter, setFilter, setMode } = useViewer();
   const forVersion = comments.filter((c) => c.version === version);
   const active = forVersion.filter((c) => !c.resolved);
   const resolved = forVersion.filter((c) => c.resolved);
   const shown = filter === "active" ? active : resolved;
 
+  const emptyTitle = filter === "active" ? `No open comments on v${version}` : "Nothing resolved yet";
+  const emptyBody =
+    filter === "active"
+      ? "Switch to Comment mode, then click anything on the prototype to start a thread."
+      : "Resolved comments for this version will collect here.";
+
   return (
     <aside className="flex w-[340px] shrink-0 flex-col border-l border-border bg-[var(--surface)]/50">
-      <div className="flex items-center justify-between px-5 pt-5">
-        <h2 className="text-lg font-bold text-text-strong">Comments</h2>
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-text-faint">on v{version}</span>
+      <div className="px-5 pt-5">
+        <div className="mb-3.5 flex items-baseline justify-between">
+          <h2 className="text-[17px] font-medium text-text-strong">Comments</h2>
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-faint">on v{version}</span>
+        </div>
+        <div className="flex border-b border-border">
+          <Tab active={filter === "active"} onClick={() => setFilter("active")}>Active {active.length}</Tab>
+          <Tab active={filter === "resolved"} onClick={() => setFilter("resolved")}>Resolved {resolved.length}</Tab>
+        </div>
       </div>
-      <div className="flex gap-4 border-b border-border px-5">
-        <Tab active={filter === "active"} onClick={() => setFilter("active")}>Active {active.length}</Tab>
-        <Tab active={filter === "resolved"} onClick={() => setFilter("resolved")}>Resolved {resolved.length}</Tab>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 pb-6 pt-4">
         {shown.length === 0 ? (
-          <p className="py-10 text-center text-sm text-text-muted">
-            {filter === "active" ? "No active comments. Switch to Comment mode and click the canvas to add one." : "Nothing resolved yet."}
-          </p>
-        ) : (
-          <div className="grid gap-3">
-            {shown.map((c) => <Card key={c.id} c={c} />)}
+          <div className="mt-1 grid place-items-center gap-3 rounded-xl border border-dashed border-border px-[22px] py-11 text-center">
+            <span className="text-brand-600">
+              <svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth={1.4}>
+                <path d="M5 8.5A1.5 1.5 0 0 1 6.5 7h19A1.5 1.5 0 0 1 27 8.5v13a1.5 1.5 0 0 1-1.5 1.5H13l-6 4v-4h-.5A1.5 1.5 0 0 1 5 21.5z" />
+              </svg>
+            </span>
+            <strong className="text-[15px] font-normal text-text-strong">{emptyTitle}</strong>
+            <p className="max-w-[230px] text-[13px] leading-relaxed text-text-muted">{emptyBody}</p>
+            <button
+              onClick={() => setMode("comment")}
+              className="mt-0.5 h-10 rounded-control border border-brand-600 bg-brand-600 px-4 text-sm font-semibold text-white hover:border-brand-700 hover:bg-brand-700"
+            >
+              Start a comment
+            </button>
           </div>
+        ) : (
+          shown.map((c) => <Card key={c.id} c={c} />)
         )}
       </div>
     </aside>
@@ -42,7 +60,7 @@ export function CommentsSidebar() {
 function Tab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick}
-      className={cn("border-b-2 pb-2.5 pt-2 text-sm font-medium", active ? "border-brand-600 text-brand-600" : "border-transparent text-text-muted hover:text-text-strong")}>
+      className={cn("flex-1 border-b-2 py-2.5 text-center text-[0.86rem] font-medium", active ? "border-brand-600 text-brand-600" : "border-transparent text-text-muted hover:text-text-strong")}>
       {children}
     </button>
   );

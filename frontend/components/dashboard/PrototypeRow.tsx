@@ -1,24 +1,42 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { MessageSquare, Pencil, RotateCcw, Share2, Trash2 } from "lucide-react";
+import { Pencil, RotateCcw, Share2, Trash2 } from "lucide-react";
 import { apiDelete, apiPost } from "@/lib/api";
 import { relativeTime } from "@/lib/format";
 import type { Prototype } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
-import { AvatarStack } from "@/components/ui/avatar";
-import { Thumbnail } from "./Thumbnail";
+import { cn } from "@/lib/utils";
+
+// Shared column template so the header row and body rows stay aligned.
+export const ROW_COLS =
+  "grid-cols-[minmax(160px,2.4fr)_70px_96px_104px_80px_132px]";
+
+// Deterministic hue per prototype so the type chip color is stable across renders.
+const HUES = ["#00896b", "#14618c", "#8a5cf6", "#c2410c", "#0891b2", "#be185d"];
+function hueFor(id: string) {
+  let n = 0;
+  for (const ch of id) n = (n + ch.charCodeAt(0)) % HUES.length;
+  return HUES[n];
+}
 
 export function PrototypeRow({ p }: { p: Prototype }) {
   const router = useRouter();
   const { openShare, openRename, askConfirm, refresh } = useDashboard();
   const canManage = p.my_access === "manager";
   const canEdit = p.my_access === "editor" || canManage;
+  const people = p.people.length ? p.people : [p.owner];
 
-  const trash = async () => {
-    await apiPost(`/prototypes/${p.id}/trash`);
-    refresh();
-  };
+  const trash = () =>
+    askConfirm({
+      title: "Move to trash?",
+      body: `“${p.name}” will be moved to Trash. You can restore it later.`,
+      label: "Move to trash",
+      onConfirm: async () => {
+        await apiPost(`/prototypes/${p.id}/trash`);
+        refresh();
+      },
+    });
   const restore = async () => {
     await apiPost(`/prototypes/${p.id}/restore`);
     refresh();
@@ -26,8 +44,8 @@ export function PrototypeRow({ p }: { p: Prototype }) {
   const remove = () =>
     askConfirm({
       title: "Delete permanently?",
-      body: `"${p.name}" and all its versions will be permanently deleted.`,
-      label: "Delete forever",
+      body: `“${p.name}” will be permanently deleted. This cannot be undone.`,
+      label: "Delete permanently",
       onConfirm: async () => {
         await apiDelete(`/prototypes/${p.id}`);
         refresh();
@@ -35,38 +53,67 @@ export function PrototypeRow({ p }: { p: Prototype }) {
     });
 
   return (
-    <div className="group flex items-center gap-4 rounded-input border border-border bg-surface px-3 py-2.5 hover:bg-surface-subtle">
-      <button onClick={() => router.push(`/p/${p.id}`)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        <div className="h-10 w-16 shrink-0 overflow-hidden rounded-md">
-          <Thumbnail id={p.id} className="h-full w-full" />
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="truncate font-semibold text-text-strong">{p.name}</span>
-            <span className="rounded bg-surface-subtle px-1.5 text-[11px] text-text-muted">v{p.version}</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-text-muted">
-            <span className="flex items-center gap-1"><MessageSquare size={11} />{p.comment_count}</span>
-            <span>{relativeTime(p.updated_at)}</span>
-            <span>{p.team}</span>
-          </div>
-        </div>
-      </button>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => router.push(`/p/${p.id}`)}
+      className={cn(
+        "dash-row grid items-center gap-3 border-b border-border-subtle px-[18px] py-[13px] text-left last:border-b-0 hover:bg-surface-subtle",
+        ROW_COLS,
+      )}
+    >
+      {/* Name */}
+      <div className="flex min-w-0 items-center gap-3">
+        <span
+          className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg font-mono text-[8px] font-bold tracking-wider text-white"
+          style={{ background: hueFor(p.id) }}
+        >
+          {p.type.toUpperCase()}
+        </span>
+        <span className="truncate text-[0.9rem] font-semibold text-text-strong">{p.name}</span>
+      </div>
 
-      <AvatarStack people={p.people.length ? p.people : [p.owner]} size={24} />
+      {/* Version */}
+      <span className="justify-self-start rounded-full bg-brand-50 px-2 py-0.5 font-mono text-[0.66rem] font-semibold text-brand-600">
+        v{p.version}
+      </span>
 
-      <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      {/* Comments */}
+      <span className="text-[0.8rem] text-text-muted">{p.comment_count}</span>
+
+      {/* Last edited */}
+      <span className="truncate text-[0.8rem] text-text-muted">{relativeTime(p.updated_at)}</span>
+
+      {/* Users */}
+      <div className="flex -space-x-2">
+        {people.slice(0, 3).map((u) => (
+          <span
+            key={u.id}
+            title={u.display_name}
+            className="grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold text-white ring-2 ring-[var(--surface)]"
+            style={{ background: "linear-gradient(135deg,#5aa9e0,#3d7fb8)" }}
+          >
+            {u.initials}
+          </span>
+        ))}
+      </div>
+
+      {/* Actions */}
+      <div
+        className="dash-row-actions flex justify-end gap-1.5"
+        onClick={(e) => e.stopPropagation()}
+      >
         {!p.trashed ? (
           <>
-            {canManage && <RowBtn title="Share" onClick={() => openShare(p)}><Share2 size={15} /></RowBtn>}
             {canEdit && <RowBtn title="Rename" onClick={() => openRename(p)}><Pencil size={15} /></RowBtn>}
-            {canManage && <RowBtn title="Trash" onClick={trash}><Trash2 size={15} /></RowBtn>}
+            {canManage && <RowBtn title="Share" onClick={() => openShare(p)}><Share2 size={15} /></RowBtn>}
+            {canManage && <RowBtn title="Move to trash" onClick={trash}><Trash2 size={15} /></RowBtn>}
           </>
         ) : (
           canManage && (
             <>
               <RowBtn title="Restore" onClick={restore}><RotateCcw size={15} /></RowBtn>
-              <RowBtn title="Delete forever" onClick={remove}><Trash2 size={15} /></RowBtn>
+              <RowBtn title="Delete permanently" onClick={remove}><Trash2 size={15} /></RowBtn>
             </>
           )
         )}
@@ -80,7 +127,7 @@ function RowBtn({ title, onClick, children }: { title: string; onClick: () => vo
     <button
       title={title}
       onClick={onClick}
-      className="flex h-8 w-8 items-center justify-center rounded-control text-text-muted hover:bg-surface hover:text-text-strong"
+      className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-surface text-text-muted transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-600"
     >
       {children}
     </button>

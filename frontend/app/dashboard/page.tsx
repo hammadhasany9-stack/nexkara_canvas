@@ -8,7 +8,7 @@ import { Topbar } from "@/components/dashboard/Topbar";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Hero } from "@/components/dashboard/Hero";
 import { PrototypeCard } from "@/components/dashboard/PrototypeCard";
-import { PrototypeRow } from "@/components/dashboard/PrototypeRow";
+import { PrototypeRow, ROW_COLS } from "@/components/dashboard/PrototypeRow";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { UploadModal } from "@/components/dashboard/UploadModal";
 import { ShareModal } from "@/components/dashboard/ShareModal";
@@ -74,7 +74,20 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="grid gap-2">
+              <div className="overflow-hidden rounded-[14px] border border-border bg-surface">
+                <div
+                  className={cn(
+                    "grid items-center gap-3 border-b border-border bg-surface-subtle px-[18px] py-[11px] font-mono text-[0.58rem] uppercase tracking-[0.12em] text-text-faint",
+                    ROW_COLS,
+                  )}
+                >
+                  <span>Name</span>
+                  <span>Version</span>
+                  <span>Comments</span>
+                  <span>Last edited</span>
+                  <span>Users</span>
+                  <span className="text-right">Actions</span>
+                </div>
                 {prototypes.map((p) => (
                   <PrototypeRow key={p.id} p={p} />
                 ))}

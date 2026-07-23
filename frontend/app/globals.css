@@ -109,3 +109,13 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* List-view rows reveal their actions on hover, matching the prototype. */
+.dash-row-actions {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.dash-row:hover .dash-row-actions,
+.dash-row:focus-within .dash-row-actions {
+  opacity: 1;
+}

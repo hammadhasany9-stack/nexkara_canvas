@@ -70,18 +70,14 @@ export function Sidebar() {
         <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
           Shared users
         </p>
-        {people.length > 0 ? (
-          <div className="grid gap-0.5">
-            {people.slice(0, 8).map((p) => (
-              <div key={p.id} className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm">
-                <Avatar person={p} size={26} />
-                <span className="truncate text-text-body">{p.display_name}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="px-3 text-xs text-text-faint">No collaborators yet</p>
-        )}
+        <div className="grid gap-0.5">
+          {people.slice(0, 8).map((p) => (
+            <div key={p.id} className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm">
+              <Avatar person={p} size={26} />
+              <span className="truncate text-text-body">{p.display_name}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </aside>
   );

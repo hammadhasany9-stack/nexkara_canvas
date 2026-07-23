@@ -16,13 +16,19 @@ export function PrototypeCard({ p }: { p: Prototype }) {
   const canEdit = p.my_access === "editor" || canManage;
 
   const open = () => router.push(`/p/${p.id}`);
-  const trash = async () => { await apiPost(`/prototypes/${p.id}/trash`); refresh(); };
+  const trash = () =>
+    askConfirm({
+      title: "Move to trash?",
+      body: `“${p.name}” will be moved to Trash. You can restore it later.`,
+      label: "Move to trash",
+      onConfirm: async () => { await apiPost(`/prototypes/${p.id}/trash`); refresh(); },
+    });
   const restore = async () => { await apiPost(`/prototypes/${p.id}/restore`); refresh(); };
   const remove = () =>
     askConfirm({
       title: "Delete permanently?",
-      body: `"${p.name}" and all its versions will be permanently deleted. This can't be undone.`,
-      label: "Delete forever",
+      body: `“${p.name}” will be permanently deleted. This cannot be undone.`,
+      label: "Delete permanently",
       onConfirm: async () => { await apiDelete(`/prototypes/${p.id}`); refresh(); },
     });
 
