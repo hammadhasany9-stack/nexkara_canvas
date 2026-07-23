@@ -6,15 +6,16 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# System build deps (argon2-cffi / asyncpg wheels usually cover this, but keep
-# gcc available for source builds on uncommon platforms).
-RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+# System build deps. Most dependencies ship wheels; these cover source builds
+# (e.g. argon2-cffi -> libffi, any psycopg fallback -> libpq) on arm64/uncommon platforms.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libffi-dev libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml ./
-RUN pip install --upgrade pip && pip install .
-
+# Copy the source BEFORE installing: `pip install .` builds the local "app"
+# package (packages = ["app"] in pyproject.toml), so the source must be present.
 COPY . .
+RUN pip install --upgrade pip && pip install .
 
 EXPOSE 8000
 
