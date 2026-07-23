@@ -20,8 +20,8 @@ export function ViewerTopbar() {
       <span className="text-[15px] font-semibold text-text-muted">Canvas</span>
       <div className="flex-1" />
 
-      <div className="hidden items-center gap-2 sm:flex">
-        <span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-patina-text">
+      <div className="hidden shrink-0 items-center gap-2 sm:flex">
+        <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-mono text-[11px] font-semibold uppercase tracking-wider text-patina-text">
           <span className="h-[7px] w-[7px] rounded-full bg-patina shadow-[0_0_0_3px_var(--patina-50)]" /> {online} online
         </span>
         <div className="flex -space-x-2">
@@ -38,7 +38,7 @@ export function ViewerTopbar() {
       <ThemeToggle />
 
       {canUpload && (
-        <button onClick={openUpload} className="flex items-center gap-2 rounded-control bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+        <button onClick={openUpload} className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-control bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
           <Upload size={16} /> Upload Version
         </button>
       )}
@@ -47,13 +47,13 @@ export function ViewerTopbar() {
         <button
           onClick={() => router.push("/dashboard?settings=profile")}
           title="Your profile"
-          className="flex items-center gap-2.5 rounded-r-[10px] border-l border-border py-1 pl-3.5 pr-2 transition-colors hover:bg-[var(--surface-subtle)]"
+          className="flex shrink-0 items-center gap-2.5 rounded-r-[10px] border-l border-border py-1 pl-3.5 pr-2 transition-colors hover:bg-[var(--surface-subtle)]"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-patina font-mono text-[0.62rem] font-bold text-white">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-patina font-mono text-[0.62rem] font-bold text-white">
             {initialsOf(me.display_name)}
           </span>
           <span className="hidden text-left leading-tight sm:block">
-            <span className="block text-[0.8rem] font-semibold text-text-strong">{me.display_name}</span>
+            <span className="block whitespace-nowrap text-[0.8rem] font-semibold text-text-strong">{me.display_name}</span>
             <span className="flex items-center gap-1 font-mono text-[0.54rem] uppercase tracking-[0.08em] text-brand-600">
               <span className="h-[5px] w-[5px] rounded-full bg-brand-600" />{me.org_role}
             </span>
