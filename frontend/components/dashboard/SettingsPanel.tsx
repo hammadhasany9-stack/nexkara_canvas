@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, LogOut, Mail, Minus, RefreshCw, Settings, ShieldCheck, User, UserPlus, Users } from "lucide-react";
+import { ChevronLeft, LogOut, Mail, Minus, RefreshCw, Settings, ShieldCheck, Trash2, User, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
 import type { AdminUser } from "@/lib/types";
@@ -168,6 +168,7 @@ function PasswordTab() {
 }
 
 function UsersTab() {
+  const me = useDashboard((s) => s.me);
   const [users, setUsers] = React.useState<AdminUser[]>([]);
   const [addOpen, setAddOpen] = React.useState(false);
   const load = React.useCallback(async () => setUsers(await apiGet<AdminUser[]>("/users")), []);
@@ -176,30 +177,47 @@ function UsersTab() {
   const remove = async (id: string) => { await apiDelete(`/users/${id}`); load(); };
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-5 flex items-center justify-between">
-        <p className="text-text-muted">{users.length} team members</p>
-        <button onClick={() => setAddOpen(true)} className="flex items-center gap-2 rounded-control bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-700"><UserPlus size={15} /> Add user</button>
+    <div className="max-w-4xl">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-text-strong">Users &amp; Access Control</h2>
+          <p className="mt-1 max-w-xl text-sm text-text-muted">
+            Manage who can access this workspace. Admins control users and settings; members review and comment on prototypes.
+          </p>
+        </div>
+        <button onClick={() => setAddOpen(true)} className="flex shrink-0 items-center gap-2 rounded-control border border-border bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-text-body hover:bg-[var(--surface-subtle)]">
+          <UserPlus size={15} /> Add User
+        </button>
       </div>
-      <div className="grid gap-2">
+
+      <div className="overflow-hidden rounded-card border border-border">
+        <div className="grid grid-cols-[1fr_120px_88px] items-center bg-[var(--surface-subtle)] px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
+          <span>User</span><span>Role</span><span />
+        </div>
         {users.map((u) => (
-          <div key={u.id} className="flex items-center justify-between rounded-input border border-border bg-[var(--surface)] px-3.5 py-2.5">
+          <div key={u.id} className="grid grid-cols-[1fr_120px_88px] items-center border-t border-border px-4 py-3">
             <span className="flex items-center gap-2.5">
-              <Avatar person={{ id: u.id, display_name: u.display_name, initials: initialsOf(u.display_name) }} size={32} />
-              <span><span className="block text-sm font-medium text-text-strong">{u.display_name}</span><span className="block text-xs text-text-faint">{u.email}</span></span>
+              <Avatar person={{ id: u.id, display_name: u.display_name, initials: initialsOf(u.display_name) }} size={34} />
+              <span><span className="block text-sm font-semibold text-text-strong">{u.display_name}</span><span className="block text-xs text-text-faint">{u.email}</span></span>
             </span>
-            <span className="flex items-center gap-2">
-              <span className="rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-xs capitalize text-text-muted">{u.org_role}</span>
-              {u.invite_status === "invited" && <button title="Resend invite" onClick={() => resend(u.id)} className="text-text-faint hover:text-brand-600"><RefreshCw size={14} /></button>}
-              <button onClick={() => remove(u.id)} className="text-xs text-text-faint hover:text-danger">Remove</button>
+            <span>
+              <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+                u.org_role === "admin" ? "bg-brand-100 text-brand-700" : "bg-[var(--surface-subtle)] text-text-muted")}>
+                {u.org_role}
+              </span>
+            </span>
+            <span className="flex items-center justify-end gap-1.5">
+              <button title="Resend invite" onClick={() => resend(u.id)}
+                className="lp-iconbtn flex h-8 w-8 items-center justify-center rounded-control text-text-muted hover:text-brand-600"><Mail size={15} /></button>
+              {u.id !== me?.id && (
+                <button title="Remove" onClick={() => remove(u.id)}
+                  className="lp-iconbtn flex h-8 w-8 items-center justify-center rounded-control text-text-faint hover:text-danger"><Trash2 size={15} /></button>
+              )}
             </span>
           </div>
         ))}
       </div>
-      <div className="mt-4 rounded-input border border-border bg-[var(--surface-subtle)] p-3.5 text-xs text-text-muted">
-        <p className="mb-1 font-semibold text-text-body">Access levels</p>
-        <p><b>Viewer</b> — view &amp; download · <b>Commenter</b> — leave feedback · <b>Editor</b> — upload &amp; edit · <b>Manager</b> — add, edit &amp; approve · <b>Admin</b> — full org access.</p>
-      </div>
+
       {addOpen && <AddUserModal onClose={() => setAddOpen(false)} onAdded={() => { setAddOpen(false); load(); }} />}
     </div>
   );
