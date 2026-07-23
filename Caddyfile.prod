@@ -1,0 +1,27 @@
+# Nexkara Canvas — production reverse proxy (automatic HTTPS via Let's Encrypt).
+# Used by docker-compose.prod.yml. Set APP_DOMAIN and SANDBOX_DOMAIN in .env.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+# --- App: Next.js + FastAPI on one origin, first-party cookies ---
+{$APP_DOMAIN} {
+	handle_path /api/* {
+		reverse_proxy api:8000
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+	encode gzip zstd
+}
+
+# --- Sandbox: isolated origin that serves ONLY prototype HTML (/s/*) ---
+# Untrusted uploaded HTML runs here with no access to the app origin or cookies.
+{$SANDBOX_DOMAIN} {
+	handle /s/* {
+		reverse_proxy api:8000
+	}
+	handle {
+		respond "Not found" 404
+	}
+	encode gzip zstd
+}

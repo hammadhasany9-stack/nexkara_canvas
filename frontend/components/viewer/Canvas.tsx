@@ -16,20 +16,43 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
   const stageRef = React.useRef<HTMLDivElement>(null);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = React.useState(900);
-  const [blobUrl, setBlobUrl] = React.useState<string>("");
+  const [iframeSrc, setIframeSrc] = React.useState<string>("");
+  const [sandboxed, setSandboxed] = React.useState(false);
 
-  // load version HTML -> blob
+  // Resolve how to load the HTML: isolated cross-origin URL (prod) or a
+  // same-origin blob (dev). See the backend /content endpoint.
   React.useEffect(() => {
     let revoke = "";
+    let cancelled = false;
     (async () => {
-      const res = await fetch(`/api/prototypes/${id}/raw?v=${version}`, { credentials: "include" });
-      const text = await res.text();
-      const url = URL.createObjectURL(new Blob([text], { type: "text/html" }));
-      revoke = url;
-      setBlobUrl(url);
+      const { url, sandboxed: sb } = await apiGet<{ url: string; sandboxed: boolean }>(
+        `/prototypes/${id}/content?v=${version}`,
+      );
+      if (cancelled) return;
+      if (sb) {
+        setSandboxed(true);
+        setIframeSrc(url);
+      } else {
+        const res = await fetch(url, { credentials: "include" });
+        const text = await res.text();
+        const blob = URL.createObjectURL(new Blob([text], { type: "text/html" }));
+        revoke = blob;
+        setSandboxed(false);
+        setIframeSrc(blob);
+      }
     })();
-    return () => { if (revoke) URL.revokeObjectURL(revoke); };
+    return () => { cancelled = true; if (revoke) URL.revokeObjectURL(revoke); };
   }, [id, version]);
+
+  // Cross-origin sandbox reports its height via postMessage.
+  React.useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      const h = (e.data && typeof e.data === "object" && e.data.__nx_height) as number | undefined;
+      if (typeof h === "number" && h > 0) setHeight(Math.max(600, h));
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
 
   // fit-to-width
   const reflow = React.useCallback(() => {
@@ -47,6 +70,7 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
   }, [reflow]);
 
   const onIframeLoad = () => {
+    if (sandboxed) return; // cross-origin: height via postMessage, no DOM access
     const measure = () => {
       try {
         const doc = iframeRef.current?.contentDocument;
@@ -77,14 +101,16 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
   const onCatchClick = (e: React.MouseEvent) => {
     const { x, y } = stageCoords(e);
     let target: string | null = null;
-    try {
-      const doc = iframeRef.current?.contentDocument;
-      const el = doc?.elementFromPoint(x, y) as HTMLElement | null;
-      if (el) {
-        const t = (el.getAttribute("data-el") || el.textContent || el.tagName).trim();
-        target = t.slice(0, 60);
-      }
-    } catch { /* */ }
+    if (!sandboxed) {
+      try {
+        const doc = iframeRef.current?.contentDocument;
+        const el = doc?.elementFromPoint(x, y) as HTMLElement | null;
+        if (el) {
+          const t = (el.getAttribute("data-el") || el.textContent || el.tagName).trim();
+          target = t.slice(0, 60);
+        }
+      } catch { /* */ }
+    }
     setDraft({ left: x, top: y, target });
   };
 
@@ -114,7 +140,7 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
         >
           <iframe
             ref={iframeRef}
-            src={blobUrl}
+            src={iframeSrc}
             title="Prototype"
             onLoad={onIframeLoad}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"

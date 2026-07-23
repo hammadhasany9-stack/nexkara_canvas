@@ -148,12 +148,24 @@ async def get_content(
     v: int | None = None,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> dict[str, str]:
+) -> dict:
+    """Return how the viewer should load this version's HTML.
+
+    - sandbox_origin set -> isolated cross-origin URL with a signed token.
+    - otherwise           -> same-origin /raw (viewer fetches it into a blob).
+    """
     proto, _ = await _load(db, user, prototype_id, AccessLevel.viewer)
-    key = await svc.content_key(db, proto, v)
+    version = v or proto.current_version
+    key = await svc.content_key(db, proto, version)
     if key is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Version not found")
-    return {"url": get_storage().presigned_url(key)}
+
+    if settings.sandbox_origin:
+        from app.core.security import create_sandbox_token
+        token = create_sandbox_token(str(proto.id), version)
+        url = f"{settings.sandbox_origin}/s/{proto.id}?v={version}&t={token}"
+        return {"url": url, "sandboxed": True}
+    return {"url": f"/api/prototypes/{proto.id}/raw?v={version}", "sandboxed": False}
 
 
 @router.post("/{prototype_id}/trash", response_model=MessageOut)

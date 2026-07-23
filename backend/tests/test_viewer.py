@@ -57,6 +57,26 @@ async def test_comment_lifecycle(admin_client):
     assert card.json()["comment_count"] == 1
 
 
+async def test_sandbox_route(admin_client):
+    from app.core.security import create_sandbox_token
+
+    pid = (await _create(admin_client)).json()["id"]
+    token = create_sandbox_token(pid, 1)
+
+    ok = await admin_client.get(f"/s/{pid}?v=1&t={token}")
+    assert ok.status_code == 200
+    assert b"Demo" in ok.content
+    assert b"__nx_height" in ok.content  # height reporter injected
+    assert "frame-ancestors" in ok.headers.get("content-security-policy", "")
+
+    bad = await admin_client.get(f"/s/{pid}?v=1&t=not-a-token")
+    assert bad.status_code == 403
+
+    # token for a different version is rejected
+    wrong = await admin_client.get(f"/s/{pid}?v=2&t={token}")
+    assert wrong.status_code == 403
+
+
 async def test_comment_rbac(admin_client, make_user):
     pid = (await _create(admin_client)).json()["id"]
     viewer_id, viewer_client = await make_user("v@nexkara.com", "Viewer")

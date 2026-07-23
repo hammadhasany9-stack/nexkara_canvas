@@ -14,7 +14,7 @@ from app.core.config import settings
 # Argon2id with tuned cost. argon2-cffi defaults are Argon2id already.
 _ph = PasswordHasher(time_cost=3, memory_cost=64 * 1024, parallelism=2)
 
-TokenPurpose = Literal["session", "device_trust", "pw_reset", "share"]
+TokenPurpose = Literal["session", "device_trust", "pw_reset", "share", "sandbox"]
 
 
 def hash_password(password: str) -> str:
@@ -84,6 +84,15 @@ def create_device_trust_token(user_id: str) -> str:
 
 def create_reset_token(user_id: str) -> str:
     return create_token(user_id, "pw_reset", dt.timedelta(minutes=10))
+
+
+def create_sandbox_token(prototype_id: str, version: int) -> str:
+    return create_token(
+        prototype_id,
+        "sandbox",
+        dt.timedelta(minutes=settings.sandbox_token_ttl_minutes),
+        extra={"v": version},
+    )
 
 
 def _cookie_kwargs() -> dict[str, Any]:

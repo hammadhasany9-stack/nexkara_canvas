@@ -9,7 +9,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.api.routes import account, auth, notifications, prototypes, users_admin, viewer, ws
+from app.api.routes import account, auth, notifications, prototypes, sandbox, users_admin, viewer, ws
 from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.ws import rooms
@@ -17,6 +17,10 @@ from app.ws import rooms
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Refuse to boot with insecure defaults in production.
+    problems = settings.validate_production()
+    if problems:
+        raise RuntimeError("Insecure production configuration:\n- " + "\n- ".join(problems))
     # Start the Redis pub/sub subscriber that fans realtime events out to the
     # WebSocket connections held by this process.
     await rooms.start()
@@ -48,6 +52,7 @@ app.include_router(account.router, prefix="")
 app.include_router(notifications.router, prefix="")
 app.include_router(viewer.router, prefix="")
 app.include_router(viewer.comments_router, prefix="")
+app.include_router(sandbox.router, prefix="")
 app.include_router(ws.router, prefix="")
 
 

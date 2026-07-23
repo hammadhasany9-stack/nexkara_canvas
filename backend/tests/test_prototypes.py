@@ -58,10 +58,14 @@ async def test_rename_and_trash_lifecycle(admin_client):
     assert len((await admin_client.get("/prototypes?section=home")).json()) == 0
 
 
-async def test_content_presigned_url(admin_client):
+async def test_content_url(admin_client):
     pid = (await _create(admin_client)).json()["id"]
     r = await admin_client.get(f"/prototypes/{pid}/content")
-    assert r.status_code == 200 and r.json()["url"].startswith("memory://")
+    assert r.status_code == 200
+    body = r.json()
+    # dev default (no sandbox origin) -> same-origin /raw, not sandboxed
+    assert body["sandboxed"] is False
+    assert "/raw" in body["url"]
 
 
 async def test_new_version_bumps(admin_client):

@@ -67,6 +67,13 @@ class Settings(BaseSettings):
     # --- Uploads ---
     max_upload_bytes: int = 5 * 1024 * 1024  # 5 MB
 
+    # --- Sandbox (separate-origin prototype rendering) ---
+    # When set (e.g. https://sandbox.canvas.example.com), uploaded prototype HTML
+    # is served from this isolated origin via a signed, short-lived token instead
+    # of a same-origin blob. Empty => same-origin blob (dev default).
+    sandbox_origin: str = ""
+    sandbox_token_ttl_minutes: int = 30
+
     @property
     def async_database_url(self) -> str:
         if self.database_url:
@@ -83,6 +90,23 @@ class Settings(BaseSettings):
     @property
     def trust_cookie_name(self) -> str:
         return "nx_trust"
+
+    @property
+    def is_production(self) -> bool:
+        return self.env.lower() in ("prod", "production")
+
+    def validate_production(self) -> list[str]:
+        """Return a list of fatal misconfigurations for a production boot."""
+        problems: list[str] = []
+        if not self.is_production:
+            return problems
+        if "change" in self.jwt_secret.lower() or len(self.jwt_secret) < 32:
+            problems.append("JWT_SECRET must be a strong random value (>=32 chars) in production.")
+        if not self.cookie_secure:
+            problems.append("COOKIE_SECURE must be true in production (cookies over HTTPS only).")
+        if self.seed_admin_password in ("admin123", "Password123!"):
+            problems.append("SEED_ADMIN_PASSWORD is a known default — set a strong one.")
+        return problems
 
 
 @lru_cache
