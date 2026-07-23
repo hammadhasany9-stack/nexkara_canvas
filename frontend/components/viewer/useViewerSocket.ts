@@ -34,6 +34,9 @@ export function useViewerSocket(id: string) {
       try { msg = JSON.parse(ev.data); } catch { return; }
       const s = store.getState();
       switch (msg.type) {
+        case "hello":
+          s.setSelf(msg.clientId);
+          break;
         case "presence.sync":
           s.setPresence(msg.members as PresenceMember[]);
           break;

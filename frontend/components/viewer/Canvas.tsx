@@ -7,7 +7,7 @@ import { DEVICE_WIDTH, useViewer } from "@/store/useViewer";
 export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number } | null) => void }) {
   const {
     id, version, device, mode, comments, filter, selectedPinId,
-    effScale, setFit, setDraft, selectPin, presence, me,
+    effScale, setFit, setDraft, selectPin, presence, selfClientId,
   } = useViewer();
   const scale = effScale();
   const deviceWidth = DEVICE_WIDTH[device];
@@ -47,16 +47,25 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
   }, [reflow]);
 
   const onIframeLoad = () => {
-    try {
-      const doc = iframeRef.current?.contentDocument;
-      if (doc) setHeight(Math.max(600, doc.body.scrollHeight));
-    } catch { /* cross-origin */ }
-    setTimeout(() => {
+    const measure = () => {
       try {
         const doc = iframeRef.current?.contentDocument;
         if (doc) setHeight(Math.max(600, doc.body.scrollHeight));
-      } catch { /* */ }
-    }, 500);
+      } catch { /* cross-origin */ }
+    };
+    measure();
+    setTimeout(measure, 500);
+    // Track the pointer inside the (same-origin blob) prototype so remote
+    // cursors follow the mouse over the rendered page, not just the chrome.
+    try {
+      const doc = iframeRef.current?.contentDocument;
+      if (doc) {
+        doc.addEventListener("mousemove", (e: MouseEvent) => {
+          sendCursor({ x: e.clientX, y: e.clientY });
+        });
+        doc.addEventListener("mouseleave", () => sendCursor(null));
+      }
+    } catch { /* cross-origin */ }
   };
 
   // comment placement + cursor tracking (coords in unscaled stage space)
@@ -139,7 +148,7 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
 
           {/* live cursors (others) */}
           <div className="pointer-events-none absolute inset-0">
-            {presence.filter((p) => p.userId !== me?.id && p.cursor).map((p) => (
+            {presence.filter((p) => p.clientId !== selfClientId && p.cursor).map((p) => (
               <div key={p.clientId} className="absolute" style={{ left: p.cursor!.x, top: p.cursor!.y }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill={p.color}>
                   <path d="M4 2l7 18 2.5-7.5L21 10 4 2z" />

@@ -39,7 +39,9 @@ interface ViewerState {
   draft: { left: number; top: number; target: string | null } | null;
   presence: PresenceMember[];
   onlineCount: number;
+  selfClientId: string;
 
+  setSelf: (clientId: string) => void;
   init: (id: string) => Promise<void>;
   loadComments: () => Promise<void>;
   setMode: (m: Mode) => void;
@@ -66,8 +68,9 @@ export const useViewer = create<ViewerState>((set, get) => ({
   id: "", me: null, proto: null, versions: [], version: 1, comments: [],
   filter: "active", mode: "browse", device: "desktop", zoom: null, fitScale: 1,
   versionsOpen: false, shareOpen: false, uploadOpen: false, selectedPinId: null, draft: null,
-  presence: [], onlineCount: 0,
+  presence: [], onlineCount: 0, selfClientId: "",
 
+  setSelf: (selfClientId) => set({ selfClientId }),
   init: async (id) => {
     set({ id });
     const [me, proto, versions] = await Promise.all([

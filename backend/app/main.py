@@ -1,6 +1,8 @@
 """FastAPI application entrypoint."""
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -10,8 +12,19 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.api.routes import account, auth, notifications, prototypes, users_admin, viewer, ws
 from app.core.config import settings
 from app.core.rate_limit import limiter
+from app.ws import rooms
 
-app = FastAPI(title="Nexkara Canvas API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start the Redis pub/sub subscriber that fans realtime events out to the
+    # WebSocket connections held by this process.
+    await rooms.start()
+    yield
+    await rooms.stop()
+
+
+app = FastAPI(title="Nexkara Canvas API", version="0.1.0", lifespan=lifespan)
 
 # Rate limiting (slowapi).
 app.state.limiter = limiter

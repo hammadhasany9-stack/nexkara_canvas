@@ -1,16 +1,26 @@
-"""In-process room manager for realtime presence, cursors, and comment events.
+"""Realtime rooms backed by Redis pub/sub + presence hashes.
 
-One room per prototype. Clients send cursor/presence updates; the server relays
-them to the other members (awareness) and pushes comment events emitted by the
-REST layer. Single-process fanout — swap in Redis pub/sub for multi-replica.
+Each process keeps only its *local* WebSocket connections. All fan-out goes
+through Redis: messages are published to a per-room channel and a single
+per-process subscriber relays them to the local sockets. Presence (who's in a
+room) lives in a Redis hash so the online list is correct across replicas.
+
+This makes live cursors / presence / comment events work with any number of
+API replicas behind a load balancer.
 """
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
-from typing import Any
+import json
+from dataclasses import dataclass
 
 from fastapi import WebSocket
+
+from app.core.redis import get_redis
+
+_CHANNEL = "nx:room:"          # + prototype_id
+_PRESENCE = "nx:presence:"     # + prototype_id (hash: client_id -> member json)
+_PATTERN = "nx:room:*"
 
 
 @dataclass
@@ -20,80 +30,133 @@ class Member:
     user_id: str
     name: str
     color: str
-    cursor: dict[str, float] | None = None
+    cursor: dict | None = None
 
 
-@dataclass
-class Room:
-    members: dict[str, Member] = field(default_factory=dict)  # client_id -> Member
+# Local sockets only (this process): prototype_id -> {client_id: WebSocket}
+_local: dict[str, dict[str, WebSocket]] = {}
+_started = False
+_task: asyncio.Task | None = None
 
 
-_rooms: dict[str, Room] = {}
-_lock = asyncio.Lock()
+async def start() -> None:
+    """Launch the per-process Redis subscriber (idempotent)."""
+    global _started, _task
+    if _started:
+        return
+    _started = True
+    _task = asyncio.create_task(_run_subscriber())
 
 
-def _presence(room: Room) -> list[dict[str, Any]]:
-    return [
-        {"clientId": m.client_id, "userId": m.user_id, "name": m.name, "color": m.color, "cursor": m.cursor}
-        for m in room.members.values()
-    ]
+async def stop() -> None:
+    global _started, _task
+    _started = False
+    if _task:
+        _task.cancel()
+        _task = None
 
 
-async def join(prototype_id: str, member: Member) -> None:
-    async with _lock:
-        room = _rooms.setdefault(prototype_id, Room())
-        room.members[member.client_id] = member
-    # tell the newcomer who's here, and tell everyone about the newcomer
-    await _send(member.ws, {"type": "presence.sync", "members": _presence(_rooms[prototype_id])})
-    await broadcast(prototype_id, {
-        "type": "presence.join",
-        "member": {"clientId": member.client_id, "userId": member.user_id, "name": member.name, "color": member.color},
-    }, exclude=member.client_id)
-
-
-async def leave(prototype_id: str, client_id: str) -> None:
-    async with _lock:
-        room = _rooms.get(prototype_id)
-        if not room:
+async def _run_subscriber() -> None:
+    while _started:
+        try:
+            pubsub = get_redis().pubsub()
+            await pubsub.psubscribe(_PATTERN)
+            async for msg in pubsub.listen():
+                if msg is None or msg.get("type") != "pmessage":
+                    continue
+                channel = msg["channel"]
+                room = channel[len(_CHANNEL):]
+                try:
+                    payload = json.loads(msg["data"])
+                except Exception:
+                    continue
+                await _deliver_local(room, payload)
+        except asyncio.CancelledError:
             return
-        room.members.pop(client_id, None)
-        empty = not room.members
-        if empty:
-            _rooms.pop(prototype_id, None)
-    await broadcast(prototype_id, {"type": "presence.leave", "clientId": client_id})
+        except Exception:
+            await asyncio.sleep(1)  # reconnect backoff
 
 
-async def update_cursor(prototype_id: str, client_id: str, cursor: dict | None) -> None:
-    room = _rooms.get(prototype_id)
-    if not room or client_id not in room.members:
+async def _deliver_local(room: str, payload: dict) -> None:
+    conns = _local.get(room)
+    if not conns:
         return
-    room.members[client_id].cursor = cursor
-    await broadcast(prototype_id, {"type": "cursor", "clientId": client_id, "cursor": cursor}, exclude=client_id)
-
-
-async def broadcast(prototype_id: str, message: dict, exclude: str | None = None) -> None:
-    room = _rooms.get(prototype_id)
-    if not room:
-        return
+    exclude = payload.pop("_exclude", None)
     dead: list[str] = []
-    for cid, m in list(room.members.items()):
+    for cid, ws in list(conns.items()):
         if cid == exclude:
             continue
         try:
-            await m.ws.send_json(message)
+            await ws.send_json(payload)
         except Exception:
             dead.append(cid)
     for cid in dead:
-        room.members.pop(cid, None)
+        conns.pop(cid, None)
 
 
-async def _send(ws: WebSocket, message: dict) -> None:
+async def _publish(room: str, message: dict) -> None:
+    await get_redis().publish(_CHANNEL + room, json.dumps(message))
+
+
+async def join(prototype_id: str, member: Member) -> None:
+    await start()
+    _local.setdefault(prototype_id, {})[member.client_id] = member.ws
+    r = get_redis()
+    info = {"userId": member.user_id, "name": member.name, "color": member.color}
+    await r.hset(_PRESENCE + prototype_id, member.client_id, json.dumps(info))
+    # safety net so a crashed process can't leave presence stale forever
+    await r.expire(_PRESENCE + prototype_id, 3600)
+
+    # tell the newcomer who's already here (direct send)
+    raw = await r.hgetall(_PRESENCE + prototype_id)
+    members = []
+    for cid, val in raw.items():
+        try:
+            m = json.loads(val)
+        except Exception:
+            continue
+        members.append({"clientId": cid, **m, "cursor": None})
     try:
-        await ws.send_json(message)
+        await member.ws.send_json({"type": "presence.sync", "members": members})
     except Exception:
         pass
 
+    await _publish(prototype_id, {
+        "type": "presence.join",
+        "member": {"clientId": member.client_id, **info},
+        "_exclude": member.client_id,
+    })
 
-def online_count(prototype_id: str) -> int:
-    room = _rooms.get(prototype_id)
-    return len(room.members) if room else 0
+
+async def leave(prototype_id: str, client_id: str) -> None:
+    conns = _local.get(prototype_id)
+    if conns:
+        conns.pop(client_id, None)
+        if not conns:
+            _local.pop(prototype_id, None)
+    try:
+        await get_redis().hdel(_PRESENCE + prototype_id, client_id)
+    except Exception:
+        pass
+    await _publish(prototype_id, {"type": "presence.leave", "clientId": client_id})
+
+
+async def update_cursor(prototype_id: str, client_id: str, cursor: dict | None) -> None:
+    await _publish(prototype_id, {
+        "type": "cursor", "clientId": client_id, "cursor": cursor, "_exclude": client_id,
+    })
+
+
+async def broadcast(prototype_id: str, message: dict, exclude: str | None = None) -> None:
+    """Publish a message to the whole room (used by the REST layer for comments)."""
+    msg = dict(message)
+    if exclude:
+        msg["_exclude"] = exclude
+    await _publish(prototype_id, msg)
+
+
+async def online_count(prototype_id: str) -> int:
+    try:
+        return await get_redis().hlen(_PRESENCE + prototype_id)
+    except Exception:
+        return 0
