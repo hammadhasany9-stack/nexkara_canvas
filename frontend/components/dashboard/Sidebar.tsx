@@ -6,6 +6,7 @@ import { apiGet } from "@/lib/api";
 import type { Person, Section } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
 import { Avatar } from "@/components/ui/avatar";
+import { NotificationsPanel } from "./NotificationsPanel";
 import { cn } from "@/lib/utils";
 
 const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
@@ -18,6 +19,7 @@ const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
 export function Sidebar() {
   const { section, setSection, counts, unread, toggleNotif } = useDashboard();
   const [people, setPeople] = React.useState<Person[]>([]);
+  const notifRef = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {
     apiGet<Person[]>("/users/directory").then(setPeople).catch(() => {});
@@ -46,6 +48,7 @@ export function Sidebar() {
         })}
 
         <button
+          ref={notifRef}
           onClick={toggleNotif}
           className="dash-navitem flex items-center justify-between rounded-[10px] px-3 py-2.5 text-sm font-medium text-text-muted"
         >
@@ -59,6 +62,9 @@ export function Sidebar() {
           )}
         </button>
       </nav>
+
+      <NotificationsPanel anchorRef={notifRef} />
+
 
       <div className="mt-4">
         <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-text-faint">

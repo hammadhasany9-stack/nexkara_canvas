@@ -51,6 +51,7 @@ class PrototypeOut(BaseModel):
 
 class PrototypeUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=200)
+    source_url: str | None = None
     layouts: list[Literal["desktop", "tablet", "mobile"]] | None = None
     team: str | None = None
 

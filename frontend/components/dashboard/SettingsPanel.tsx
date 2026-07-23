@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ChevronLeft, LogOut, Mail, Minus, RefreshCw, Settings, ShieldCheck, Trash2, User, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ApiError, apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
+import { ApiError, apiDelete, apiGet, apiPost } from "@/lib/api";
 import type { AdminUser } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
 import { Modal } from "@/components/ui/modal";
@@ -18,7 +18,7 @@ const inputCls =
 
 export function SettingsPanel() {
   const router = useRouter();
-  const { settingsTab, closeSettings, openSettings, me, loadMe } = useDashboard();
+  const { settingsTab, closeSettings, openSettings, me } = useDashboard();
   const isAdmin = me?.org_role === "admin";
   if (!settingsTab) return null;
 
@@ -72,7 +72,7 @@ export function SettingsPanel() {
           </div>
         </div>
         <div className="p-6 lg:p-10">
-          {settingsTab === "profile" && <ProfileTab onSaved={loadMe} />}
+          {settingsTab === "profile" && <ProfileTab />}
           {settingsTab === "password" && <PasswordTab />}
           {settingsTab === "users" && isAdmin && <UsersTab />}
         </div>
@@ -81,21 +81,31 @@ export function SettingsPanel() {
   );
 }
 
-function ProfileTab({ onSaved }: { onSaved: () => void }) {
+function ProfileTab() {
   const me = useDashboard((s) => s.me);
-  const [name, setName] = React.useState(me?.display_name ?? "");
-  const [msg, setMsg] = React.useState("");
-  const save = async () => { await apiPatch("/account/profile", { display_name: name }); setMsg("Profile updated."); onSaved(); };
+  const readCls = cn(inputCls, "cursor-default text-text-body opacity-90");
   return (
-    <div className="max-w-xl">
-      <p className="mb-6 text-text-muted">Your account details.</p>
-      <div className="grid max-w-md gap-4 rounded-card border border-border bg-[var(--surface)] p-6">
-        {msg && <Banner kind="info">{msg}</Banner>}
-        <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Name</span>
-          <input value={name} onChange={(e) => { setName(e.target.value); setMsg(""); }} className={inputCls} /></label>
+    <div className="max-w-2xl">
+      <div className="mb-6 flex items-center gap-4">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold text-white" style={{ background: "linear-gradient(135deg,#5aa9e0,#3d7fb8)" }}>
+          {me ? initialsOf(me.display_name) : "…"}
+        </span>
+        <div>
+          <div className="text-xl font-bold text-text-strong">{me?.display_name}</div>
+          <div className="text-sm text-text-muted">{me?.email}</div>
+          <span className="mt-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-brand-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-600" />{me?.org_role}
+          </span>
+        </div>
+      </div>
+      <div className="grid gap-4 rounded-card border border-border bg-[var(--surface)] p-6">
+        <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Full name</span>
+          <input value={me?.display_name ?? ""} readOnly className={readCls} /></label>
         <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Email</span>
-          <input value={me?.email ?? ""} readOnly className={cn(inputCls, "opacity-70")} /></label>
-        <div><button onClick={save} disabled={!name.trim()} className="rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60">Save changes</button></div>
+          <input value={me?.email ?? ""} readOnly className={readCls} /></label>
+        <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Role</span>
+          <input value={me?.org_role ? me.org_role[0].toUpperCase() + me.org_role.slice(1) : ""} readOnly className={readCls} /></label>
+        <p className="text-sm text-text-faint">Your profile details are managed by your organization. Contact an admin to make changes.</p>
       </div>
     </div>
   );

@@ -119,6 +119,8 @@ async def update_prototype(
     proto, _ = await _load(db, user, prototype_id, AccessLevel.editor)
     if body.name is not None:
         proto.name = body.name
+    if body.source_url is not None:
+        proto.source_url = body.source_url
     if body.layouts is not None:
         proto.layouts = body.layouts
     if body.team is not None:

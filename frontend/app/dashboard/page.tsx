@@ -13,7 +13,6 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { UploadModal } from "@/components/dashboard/UploadModal";
 import { ShareModal } from "@/components/dashboard/ShareModal";
 import { SettingsPanel } from "@/components/dashboard/SettingsPanel";
-import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { RenameModal } from "@/components/dashboard/RenameModal";
 import { ConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 
@@ -50,7 +49,6 @@ export default function DashboardPage() {
         <Sidebar />
         <main className="min-w-0 flex-1">
           <Hero />
-          <NotificationsPanel />
 
           <div className="px-6 py-8 lg:px-8">
             <div className="mb-5 flex items-center justify-between">
