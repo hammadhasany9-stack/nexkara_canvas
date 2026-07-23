@@ -238,7 +238,7 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   const submitLabel = method === "invite" ? "Send invite" : "Add & send invite";
 
   return (
-    <Modal open onClose={onClose} title="Add a user" size="sm"
+    <Modal open onClose={onClose} title="Add a user" size="md"
       footer={<><button onClick={onClose} className="rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body">Cancel</button>
         <button onClick={submit} disabled={!ready || loading} className="rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{loading ? "Working…" : submitLabel}</button></>}>
       <div className="grid gap-4">
@@ -282,7 +282,7 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick}
-      className={cn("rounded-full border px-4 py-1.5 text-sm font-medium", active ? "border-brand-600 text-brand-600" : "border-border text-text-muted hover:text-text-strong")}>
+      className={cn("whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium", active ? "border-brand-600 text-brand-600" : "border-border text-text-muted hover:text-text-strong")}>
       {children}
     </button>
   );
