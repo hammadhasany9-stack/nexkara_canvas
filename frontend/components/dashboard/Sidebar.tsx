@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Clock, Home, Share2, Trash2 } from "lucide-react";
+import { Bell, ChevronRight, Clock, Home, Share2, Trash2 } from "lucide-react";
 import { apiGet } from "@/lib/api";
 import type { Person, Section } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
@@ -35,14 +35,14 @@ export function Sidebar() {
               key={id}
               onClick={() => setSection(id)}
               className={cn(
-                "dash-navitem flex items-center justify-between rounded-[10px] px-3 py-2.5 text-sm font-medium",
-                active ? "bg-brand-100 text-brand-700" : "text-text-muted",
+                "dash-navitem flex h-9 items-center justify-between rounded-[9px] px-2.5 text-[0.84rem] font-medium",
+                active ? "bg-brand-100 text-brand-700" : "text-text-body",
               )}
             >
-              <span className="flex items-center gap-3">
-                <Icon size={18} /> {label}
+              <span className="flex items-center gap-2.5">
+                <Icon size={16} /> {label}
               </span>
-              <span className="text-xs text-text-faint">{counts[id] ?? 0}</span>
+              <span className="font-mono text-[0.6rem] text-text-faint">{counts[id] ?? 0}</span>
             </button>
           );
         })}
@@ -50,16 +50,16 @@ export function Sidebar() {
         <button
           ref={notifRef}
           onClick={toggleNotif}
-          className="dash-navitem flex items-center justify-between rounded-[10px] px-3 py-2.5 text-sm font-medium text-text-muted"
+          className="dash-navitem flex h-9 items-center gap-2.5 rounded-[9px] px-2.5 text-[0.84rem] font-medium text-text-body"
         >
-          <span className="flex items-center gap-3">
-            <Bell size={18} /> Notifications
-          </span>
+          <Bell size={16} />
+          <span className="flex-1 text-left">Notifications</span>
           {unread > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">
+            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1.5 font-mono text-[0.56rem] font-bold text-white">
               {unread}
             </span>
           )}
+          <ChevronRight size={15} className="text-text-faint" />
         </button>
       </nav>
 

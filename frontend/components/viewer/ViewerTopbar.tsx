@@ -1,12 +1,14 @@
 "use client";
 
-import { Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Settings, Upload } from "lucide-react";
 import { useViewer } from "@/store/useViewer";
 import { Logo } from "@/components/auth/Logo";
 import { ThemeToggle } from "@/components/auth/ThemeToggle";
 import { initialsOf } from "@/lib/format";
 
 export function ViewerTopbar() {
+  const router = useRouter();
   const { me, onlineCount, presence, openUpload, proto } = useViewer();
   const canUpload = proto?.my_access === "editor" || proto?.my_access === "manager";
   const online = Math.max(1, onlineCount);
@@ -25,7 +27,7 @@ export function ViewerTopbar() {
         <div className="flex -space-x-2">
           {presence.slice(0, 4).map((p) => (
             <span key={p.clientId} title={p.name}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-[var(--surface)]"
+              className="flex h-7 w-7 items-center justify-center rounded-full font-mono text-[10px] font-bold text-white ring-2 ring-[var(--surface)]"
               style={{ background: p.color }}>
               {initialsOf(p.name)}
             </span>
@@ -42,17 +44,22 @@ export function ViewerTopbar() {
       )}
 
       {me && (
-        <div className="flex items-center gap-2.5 rounded-full border border-border bg-[var(--surface)] py-1 pl-1 pr-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: "linear-gradient(135deg,#5aa9e0,#3d7fb8)" }}>
+        <button
+          onClick={() => router.push("/dashboard?settings=profile")}
+          title="Your profile"
+          className="flex items-center gap-2.5 rounded-r-[10px] border-l border-border py-1 pl-3.5 pr-2 transition-colors hover:bg-[var(--surface-subtle)]"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-patina font-mono text-[0.62rem] font-bold text-white">
             {initialsOf(me.display_name)}
           </span>
           <span className="hidden text-left leading-tight sm:block">
-            <span className="block text-sm font-semibold text-text-strong">{me.display_name}</span>
-            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-brand-600">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-600" />{me.org_role}
+            <span className="block text-[0.8rem] font-semibold text-text-strong">{me.display_name}</span>
+            <span className="flex items-center gap-1 font-mono text-[0.54rem] uppercase tracking-[0.08em] text-brand-600">
+              <span className="h-[5px] w-[5px] rounded-full bg-brand-600" />{me.org_role}
             </span>
           </span>
-        </div>
+          <Settings size={15} className="text-text-faint" />
+        </button>
       )}
     </header>
   );

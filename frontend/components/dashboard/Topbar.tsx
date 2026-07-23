@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useDashboard } from "@/store/useDashboard";
 import { Logo } from "@/components/auth/Logo";
 import { ThemeToggle } from "@/components/auth/ThemeToggle";
@@ -21,24 +21,22 @@ export function Topbar() {
 
       <button
         onClick={() => openSettings("profile")}
-        className="flex items-center gap-2.5 rounded-full border border-border bg-[var(--surface)] py-1 pl-1 pr-3 transition-colors hover:border-[var(--slate-300)]"
+        title="Your profile"
+        className="flex items-center gap-2.5 rounded-r-[10px] border-l border-border py-1 pl-3.5 pr-2 transition-colors hover:bg-[var(--surface-subtle)]"
       >
-        <span
-          className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
-          style={{ background: "linear-gradient(135deg,#5aa9e0,#3d7fb8)" }}
-        >
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-patina font-mono text-[0.62rem] font-bold text-white">
           {me ? initialsOf(me.display_name) : "…"}
         </span>
         <span className="hidden text-left leading-tight sm:block">
-          <span className="block text-sm font-semibold text-text-strong">
+          <span className="block text-[0.82rem] font-semibold text-text-strong">
             {me?.display_name ?? ""}
           </span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-brand-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-600" />
+          <span className="flex items-center gap-1 font-mono text-[0.54rem] uppercase tracking-[0.08em] text-brand-600">
+            <span className="h-[5px] w-[5px] rounded-full bg-brand-600" />
             {me?.org_role ?? ""}
           </span>
         </span>
-        <ChevronRight size={15} className="text-text-faint" />
+        <Settings size={15} className="text-text-faint" />
       </button>
     </header>
   );

@@ -70,12 +70,12 @@ export function Hero() {
         </div>
 
         {/* stats */}
-        <div className="mt-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-text-faint">
-          <span>{counts.home} Prototypes</span>
+        <div className="mt-6 flex items-center gap-[22px] font-mono text-[0.64rem] uppercase tracking-[0.08em] text-text-faint">
+          <span>{counts.home} prototypes</span>
           <Dot />
-          <span>{collaborators} Collaborators</span>
+          <span>{collaborators} collaborators</span>
           <Dot />
-          <span>{unread} Updates today</span>
+          <span>{unread} updates today</span>
         </div>
       </div>
     </section>
@@ -83,5 +83,5 @@ export function Hero() {
 }
 
 function Dot() {
-  return <span className="h-1 w-1 rounded-full bg-text-faint/60" />;
+  return <span className="h-1 w-1 rounded-full bg-text-faint" />;
 }
