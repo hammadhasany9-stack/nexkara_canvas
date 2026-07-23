@@ -19,8 +19,8 @@ export function ViewerTopbar() {
       <div className="flex-1" />
 
       <div className="hidden items-center gap-2 sm:flex">
-        <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-brand-600">
-          <span className="h-2 w-2 rounded-full bg-brand-600" /> {online} online
+        <span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-patina-text">
+          <span className="h-[7px] w-[7px] rounded-full bg-patina shadow-[0_0_0_3px_var(--patina-50)]" /> {online} online
         </span>
         <div className="flex -space-x-2">
           {presence.slice(0, 4).map((p) => (

@@ -42,6 +42,11 @@
   --text-faint: #94a3b8;
   --text-on-brand: #ffffff;
 
+  /* patina (blue) — secondary accent: presence + resolved states */
+  --patina: #14618c;
+  --patina-text: #0e4666;
+  --patina-50: rgba(20, 97, 140, 0.12);
+
   --danger: #dc2626;
   --ring: rgba(0, 137, 107, 0.35);
   --shadow-md: 0 4px 14px rgba(15, 25, 40, 0.10);
@@ -76,6 +81,10 @@ html.dark {
   --brand-600: #12a986;
   --brand-100: rgba(18, 169, 134, 0.24);
   --brand-50: rgba(18, 169, 134, 0.14);
+
+  --patina: #5aa9e0;
+  --patina-text: #82c0ea;
+  --patina-50: rgba(90, 169, 224, 0.16);
 
   --danger: #f87171;
   --ring: rgba(18, 169, 134, 0.40);

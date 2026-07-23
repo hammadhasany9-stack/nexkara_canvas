@@ -26,6 +26,11 @@ const config: Config = {
           100: "var(--brand-100)",
           50: "var(--brand-50)",
         },
+        patina: {
+          DEFAULT: "var(--patina)",
+          text: "var(--patina-text)",
+          50: "var(--patina-50)",
+        },
         danger: "var(--danger)",
         ring: "var(--ring)",
       },

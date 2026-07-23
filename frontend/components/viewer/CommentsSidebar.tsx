@@ -86,7 +86,7 @@ function Card({ c }: { c: Comment }) {
         <span className="flex items-center gap-1.5">
           <span className="rounded bg-[var(--surface-subtle)] px-1.5 text-[10px] font-semibold uppercase text-text-muted">v{c.version}</span>
           <button onClick={(e) => { e.stopPropagation(); resolve(c.id, !c.resolved); }} title={c.resolved ? "Reopen" : "Resolve"}
-            className={cn("flex h-5 w-5 items-center justify-center rounded-full border", c.resolved ? "border-brand-600 bg-brand-600 text-white" : "border-border text-text-faint hover:text-brand-600")}>
+            className={cn("flex h-5 w-5 items-center justify-center rounded-full border", c.resolved ? "border-patina bg-patina-50 text-patina" : "border-border text-text-faint hover:border-patina hover:text-patina")}>
             <Check size={12} />
           </button>
         </span>

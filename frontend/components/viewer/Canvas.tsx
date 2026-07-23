@@ -4,6 +4,14 @@ import * as React from "react";
 import { apiGet } from "@/lib/api";
 import { DEVICE_WIDTH, useViewer } from "@/store/useViewer";
 
+// Stable per-author pin color (patina blue is one of the accents, matching the prototype).
+const PIN_COLORS = ["#14618c", "#00896b", "#8a5cf6", "#c2410c", "#0891b2", "#be185d"];
+function pinColor(id: string): string {
+  let n = 0;
+  for (const ch of id) n = (n + ch.charCodeAt(0)) % PIN_COLORS.length;
+  return PIN_COLORS[n];
+}
+
 export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number } | null) => void }) {
   const {
     id, version, device, mode, comments, filter, selectedPinId,
@@ -155,19 +163,28 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
 
           {/* pins */}
           <div className="pointer-events-none absolute inset-0">
-            {visiblePins.map((c, i) => (
+            {visiblePins.map((c) => (
               <button
                 key={c.id}
                 onClick={(e) => { e.stopPropagation(); selectPin(c.id); }}
-                className="pointer-events-auto absolute flex h-7 w-7 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full rounded-bl-none text-xs font-bold text-white shadow-lg"
+                className="pointer-events-auto absolute flex h-[26px] w-[26px] -translate-x-1/2 -translate-y-full items-center justify-center rounded-full rounded-bl-none font-mono text-[0.6rem] font-bold text-white"
                 style={{
                   left: c.left, top: c.top,
-                  background: c.resolved ? "var(--text-faint)" : "var(--brand-600)",
-                  outline: selectedPinId === c.id ? "2px solid var(--brand-700)" : "none",
+                  background: pinColor(c.author?.id ?? c.id),
+                  border: "1.5px solid var(--app-bg)",
+                  boxShadow:
+                    selectedPinId === c.id
+                      ? "0 0 0 3px var(--patina-50), 0 2px 10px rgba(15,25,40,.22)"
+                      : "0 2px 8px rgba(15,25,40,.16)",
                 }}
                 title={c.body}
               >
-                {i + 1}
+                {c.resolved ? "✓" : (c.author?.initials ?? "?")}
+                {!c.resolved && c.replies.length > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 grid h-3.5 min-w-3.5 place-items-center rounded-full border-[1.5px] border-[var(--app-bg)] bg-patina px-0.5 font-mono text-[0.5rem] font-bold leading-none text-white">
+                    {c.replies.length}
+                  </span>
+                )}
               </button>
             ))}
           </div>
