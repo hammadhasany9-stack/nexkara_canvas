@@ -1,8 +1,12 @@
 "use client";
 
 import * as React from "react";
+import { Check, Frame, Send, X } from "lucide-react";
 import { apiGet } from "@/lib/api";
-import { DEVICE_WIDTH, useViewer } from "@/store/useViewer";
+import { relativeTime } from "@/lib/format";
+import { DEVICE_WIDTH, useViewer, type Comment } from "@/store/useViewer";
+import { Avatar } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 // Stable per-author pin color (patina blue is one of the accents, matching the prototype).
 const PIN_COLORS = ["#14618c", "#00896b", "#8a5cf6", "#c2410c", "#0891b2", "#be185d"];
@@ -15,10 +19,21 @@ function pinColor(id: string): string {
 export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number } | null) => void }) {
   const {
     id, version, device, mode, comments, filter, selectedPinId,
-    effScale, setFit, setDraft, selectPin, presence, selfClientId,
+    effScale, setFit, setDraft, selectPin, presence, selfClientId, reply, resolve,
   } = useViewer();
   const scale = effScale();
   const deviceWidth = DEVICE_WIDTH[device];
+
+  // Browse-mode pin popover: anchored to the clicked pin (viewport coords).
+  const [pop, setPop] = React.useState<{ id: string; x: number; y: number } | null>(null);
+  const openPop = (commentId: string, el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    setPop({ id: commentId, x: r.right + 8, y: r.top });
+    selectPin(commentId);
+  };
+  const closePop = () => { setPop(null); selectPin(null); };
+  // Any pin that disappears (version switch) or a scroll should dismiss the popover.
+  React.useEffect(() => { setPop(null); }, [version, mode]);
 
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const stageRef = React.useRef<HTMLDivElement>(null);
@@ -139,7 +154,24 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
       }}
       onMouseMove={onMove}
       onMouseLeave={() => sendCursor(null)}
+      onScroll={() => pop && closePop()}
     >
+      {pop && (() => {
+        const c = visiblePins.find((x) => x.id === pop.id);
+        const idx = visiblePins.findIndex((x) => x.id === pop.id);
+        if (!c) return null;
+        return (
+          <PinPopover
+            comment={c}
+            num={idx + 1}
+            x={pop.x}
+            y={pop.y}
+            onClose={closePop}
+            onResolve={() => resolve(c.id, !c.resolved)}
+            onReply={(body) => reply(c.id, body)}
+          />
+        );
+      })()}
       <div className="flex min-h-full w-full justify-center py-10">
         <div
           ref={stageRef}
@@ -166,7 +198,7 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
             {visiblePins.map((c) => (
               <button
                 key={c.id}
-                onClick={(e) => { e.stopPropagation(); selectPin(c.id); }}
+                onClick={(e) => { e.stopPropagation(); openPop(c.id, e.currentTarget); }}
                 className="pointer-events-auto absolute flex h-[26px] w-[26px] -translate-x-1/2 -translate-y-full items-center justify-center rounded-full rounded-bl-none font-mono text-[0.6rem] font-bold text-white"
                 style={{
                   left: c.left, top: c.top,
@@ -203,6 +235,81 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Browse-mode comment popover anchored to a pin (matches the prototype).
+function PinPopover({
+  comment: c, num, x, y, onClose, onResolve, onReply,
+}: {
+  comment: Comment;
+  num: number;
+  x: number;
+  y: number;
+  onClose: () => void;
+  onResolve: () => void;
+  onReply: (body: string) => void;
+}) {
+  const [text, setText] = React.useState("");
+  const author = c.author ?? { id: "?", display_name: "Unknown", initials: "?" };
+  const send = () => { if (text.trim()) { onReply(text.trim()); setText(""); } };
+
+  // Keep the card on-screen (it is 300px wide).
+  const left = Math.min(x, (typeof window !== "undefined" ? window.innerWidth : 1440) - 316);
+  const top = Math.max(12, Math.min(y, (typeof window !== "undefined" ? window.innerHeight : 900) - 220));
+
+  return (
+    <div
+      className="fixed z-30 w-[300px] rounded-xl border border-border bg-[var(--surface)] p-3 shadow-[var(--shadow-modal)]"
+      style={{ left, top }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full rounded-bl-none bg-brand-600 font-mono text-[0.6rem] font-bold text-white">
+          {c.resolved ? "✓" : num}
+        </span>
+        <Avatar person={author} size={26} />
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="block truncate text-[0.84rem] font-semibold text-text-strong">{author.display_name}</span>
+          <span className="block font-mono text-[0.56rem] uppercase tracking-wider text-text-faint">
+            {relativeTime(c.created_at)} · v{c.version}
+          </span>
+        </span>
+        <button onClick={onResolve} title={c.resolved ? "Reopen" : "Resolve"}
+          className={cn("grid h-6 w-6 place-items-center rounded-full border", c.resolved ? "border-patina bg-patina-50 text-patina" : "border-border text-text-faint hover:border-patina hover:text-patina")}>
+          <Check size={13} />
+        </button>
+        <button onClick={onClose} title="Close" className="grid h-6 w-6 place-items-center rounded-full text-text-faint hover:text-text-strong">
+          <X size={14} />
+        </button>
+      </div>
+
+      <p className="mt-2.5 text-[0.9rem] leading-relaxed text-text-body">{c.body}</p>
+      {c.target && (
+        <p className="mt-2 inline-flex items-center gap-1 rounded bg-[var(--surface-subtle)] px-1.5 py-0.5 font-mono text-[11px] text-text-muted">
+          <Frame size={11} /> {c.target}
+        </p>
+      )}
+
+      {c.replies.length > 0 && (
+        <div className="mt-3 grid gap-2 border-l-2 border-border pl-3">
+          {c.replies.map((r) => (
+            <div key={r.id} className="text-sm">
+              <span className="font-medium text-text-strong">{r.author?.display_name ?? "Unknown"}</span>{" "}
+              <span className="text-xs text-text-faint">{relativeTime(r.created_at)}</span>
+              <p className="text-text-body">{r.body}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 flex items-center gap-1.5">
+        <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
+          placeholder="Reply…" autoFocus
+          className="h-9 flex-1 rounded-input border border-border bg-[var(--surface-subtle)] px-3 text-sm text-text-strong placeholder:text-text-faint focus:border-brand-600 focus:outline-none" />
+        <button onClick={send} className="flex h-9 w-9 items-center justify-center rounded-control bg-brand-600 text-white hover:bg-brand-700"><Send size={15} /></button>
       </div>
     </div>
   );

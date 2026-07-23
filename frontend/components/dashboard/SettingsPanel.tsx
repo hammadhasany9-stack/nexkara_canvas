@@ -34,7 +34,7 @@ export function SettingsPanel() {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex bg-bg">
+    <div className="fixed inset-x-0 bottom-0 top-[72px] z-40 flex bg-bg">
       {/* left panel */}
       <aside className="hidden w-[248px] shrink-0 flex-col border-r border-border bg-[var(--surface)]/40 md:flex">
         <div className="flex items-center gap-3 border-b border-border p-4">
@@ -87,7 +87,7 @@ function ProfileTab() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6 flex items-center gap-4">
-        <span className="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold text-white" style={{ background: "linear-gradient(135deg,#5aa9e0,#3d7fb8)" }}>
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-patina font-mono text-lg font-bold text-white">
           {me ? initialsOf(me.display_name) : "…"}
         </span>
         <div>
@@ -195,7 +195,7 @@ function UsersTab() {
             Manage who can access this workspace. Admins control users and settings; members review and comment on prototypes.
           </p>
         </div>
-        <button onClick={() => setAddOpen(true)} className="flex shrink-0 items-center gap-2 rounded-control border border-border bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-text-body hover:bg-[var(--surface-subtle)]">
+        <button onClick={() => setAddOpen(true)} className="flex shrink-0 items-center gap-2 rounded-control bg-[#1b2330] px-4 py-2.5 text-sm font-semibold text-white hover:brightness-125">
           <UserPlus size={15} /> Add User
         </button>
       </div>
