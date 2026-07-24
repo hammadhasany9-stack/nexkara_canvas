@@ -36,7 +36,7 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="lp-overlay absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden
       />
@@ -44,7 +44,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-10 w-full rounded-card border border-border bg-surface shadow-2xl",
+          "lp-modal relative z-10 w-full rounded-card border border-border bg-surface shadow-2xl",
           width,
         )}
       >
@@ -61,7 +61,7 @@ export function Modal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-control p-1 text-text-faint hover:bg-surface-subtle hover:text-text-strong"
+            className="lp-iconbtn rounded-control p-1 text-text-faint hover:bg-surface-subtle hover:text-text-strong"
           >
             <X size={18} />
           </button>

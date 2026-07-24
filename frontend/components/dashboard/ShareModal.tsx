@@ -53,8 +53,8 @@ export function ShareModal() {
     try { await navigator.clipboard.writeText(link); toast.success("Share link copied."); } catch { /* ignore */ }
     setCopied(true); setTimeout(() => setCopied(false), 1600);
   };
-  const finish = () => {
-    const goto = shareIsNew && id ? `/p/${id}` : null;
+  const openProto = () => {
+    const goto = id ? `/p/${id}` : null;
     closeShare();
     if (goto) router.push(goto);
   };
@@ -65,15 +65,20 @@ export function ShareModal() {
   return (
     <Modal
       open={!!shareTarget}
-      onClose={finish}
+      onClose={closeShare}
       eyebrow="Share"
       title="Share prototype"
       footer={
         <div className="flex w-full items-center justify-between">
           <span className="text-sm text-text-faint">{summary}</span>
-          <button onClick={finish} className="rounded-control bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">
-            {shareIsNew ? "Share" : "Done"}
-          </button>
+          <div className="flex gap-2">
+            <button onClick={closeShare} className="lp-press rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body transition-colors hover:bg-[var(--surface)]">
+              {shareIsNew ? "Done" : "Close"}
+            </button>
+            <button onClick={openProto} className="lp-press rounded-control bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
+              Open prototype
+            </button>
+          </div>
         </div>
       }
     >

@@ -8,6 +8,8 @@ import type { Person } from "@/lib/types";
 import { useViewer } from "@/store/useViewer";
 import { Avatar } from "@/components/ui/avatar";
 
+interface Member { user: Person; access: string; }
+
 export function ShareDrawer() {
   const { shareOpen, toggleShare, id, version } = useViewer();
   const [q, setQ] = React.useState("");
@@ -16,15 +18,22 @@ export function ShareDrawer() {
   const [message, setMessage] = React.useState("");
   const [sent, setSent] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const [members, setMembers] = React.useState<Member[]>([]);
+
+  const loadMembers = React.useCallback(() => {
+    if (id) apiGet<Member[]>(`/prototypes/${id}/members`).then(setMembers).catch(() => {});
+  }, [id]);
+
+  React.useEffect(() => { if (shareOpen) loadMembers(); }, [shareOpen, loadMembers]);
 
   React.useEffect(() => {
     if (!q.trim()) { setSuggestions([]); return; }
     let ok = true;
     apiGet<Person[]>(`/users/directory?q=${encodeURIComponent(q)}`).then((r) => {
-      if (ok) setSuggestions(r.filter((p) => !invited.some((i) => i.id === p.id)));
+      if (ok) setSuggestions(r.filter((p) => !invited.some((i) => i.id === p.id) && !members.some((m) => m.user.id === p.id)));
     });
     return () => { ok = false; };
-  }, [q, invited]);
+  }, [q, invited, members]);
 
   if (!shareOpen) return null;
 
@@ -32,7 +41,7 @@ export function ShareDrawer() {
   const send = async () => {
     await Promise.all(invited.map((p) => apiPost(`/prototypes/${id}/members`, { user_id: p.id, access: "commenter" }).catch(() => {})));
     toast.success(invited.length === 1 ? `Invited ${invited[0].display_name}.` : `Invited ${invited.length} people.`);
-    setSent(true); setTimeout(() => { setSent(false); setInvited([]); setMessage(""); }, 1800);
+    setSent(true); loadMembers(); setTimeout(() => { setSent(false); setInvited([]); setMessage(""); }, 1800);
   };
   const copyLink = async () => {
     const r = await apiPost<{ url: string }>(`/prototypes/${id}/share-link`);
@@ -46,13 +55,28 @@ export function ShareDrawer() {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40" onClick={toggleShare} />
-      <div className="fixed right-0 top-0 z-50 h-full w-96 overflow-y-auto border-l border-border bg-[var(--surface)] p-5 shadow-2xl">
+      <div className="lp-overlay fixed inset-0 z-40 bg-black/40" onClick={toggleShare} />
+      <div className="lp-drawer-right fixed right-0 top-0 z-50 h-full w-96 overflow-y-auto border-l border-border bg-[var(--surface)] p-5 shadow-2xl">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-lg font-bold text-text-strong">Share</h2>
-          <button onClick={toggleShare} className="rounded-control p-1 text-text-faint hover:bg-[var(--surface-subtle)] hover:text-text-strong"><X size={18} /></button>
+          <button onClick={toggleShare} className="lp-iconbtn rounded-control p-1 text-text-faint hover:bg-[var(--surface-subtle)] hover:text-text-strong"><X size={18} /></button>
         </div>
         <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-text-faint">on v{version}</p>
+
+        {members.length > 0 && (
+          <div className="mb-5">
+            <p className="mb-2 text-sm font-semibold text-text-strong">People with access</p>
+            <div className="grid gap-1.5">
+              {members.map((m) => (
+                <div key={m.user.id} className="flex items-center gap-2.5 rounded-input border border-border px-3 py-2">
+                  <Avatar person={m.user} size={28} />
+                  <span className="min-w-0 flex-1 truncate text-sm text-text-body">{m.user.display_name}</span>
+                  <span className="shrink-0 rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-[11px] font-medium capitalize text-text-muted">{m.access}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <p className="mb-2 text-sm font-semibold text-text-strong">Invite people</p>
         <div className="relative">

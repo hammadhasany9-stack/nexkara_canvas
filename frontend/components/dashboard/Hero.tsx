@@ -63,7 +63,7 @@ export function Hero() {
           />
           <button
             onClick={openUpload}
-            className="flex shrink-0 items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="lp-press flex shrink-0 items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
           >
             <Upload size={16} /> Upload
           </button>

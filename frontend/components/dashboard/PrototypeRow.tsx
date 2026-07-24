@@ -132,7 +132,7 @@ function RowBtn({ title, onClick, children }: { title: string; onClick: () => vo
     <button
       title={title}
       onClick={onClick}
-      className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-surface text-text-muted transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-600"
+      className="lp-iconbtn grid h-8 w-8 place-items-center rounded-lg border border-border bg-surface text-text-muted transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-600"
     >
       {children}
     </button>

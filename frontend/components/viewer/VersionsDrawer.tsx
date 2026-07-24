@@ -10,16 +10,16 @@ export function VersionsDrawer() {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40" onClick={toggleVersions} />
-      <div className="fixed left-0 top-0 z-50 h-full w-80 border-r border-border bg-[var(--surface)] p-4 shadow-2xl">
+      <div className="lp-overlay fixed inset-0 z-40 bg-black/40" onClick={toggleVersions} />
+      <div className="lp-drawer-left fixed left-0 top-0 z-50 h-full w-80 border-r border-border bg-[var(--surface)] p-4 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-text-strong">Versions</h2>
-          <button onClick={toggleVersions} className="rounded-control p-1 text-text-faint hover:bg-[var(--surface-subtle)] hover:text-text-strong"><X size={18} /></button>
+          <button onClick={toggleVersions} className="lp-iconbtn rounded-control p-1 text-text-faint hover:bg-[var(--surface-subtle)] hover:text-text-strong"><X size={18} /></button>
         </div>
         <div className="grid gap-2">
           {versions.map((v) => (
             <button key={v.id} onClick={() => pickVersion(v.version)}
-              className={cn("flex items-center justify-between rounded-input border px-3 py-2.5 text-left",
+              className={cn("lp-press flex items-center justify-between rounded-input border px-3 py-2.5 text-left transition-colors",
                 v.version === version ? "border-brand-600 bg-brand-50" : "border-border hover:bg-[var(--surface-subtle)]")}>
               <span>
                 <span className="block text-sm font-semibold text-text-strong">{v.label}</span>

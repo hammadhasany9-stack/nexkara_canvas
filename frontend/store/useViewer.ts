@@ -37,7 +37,9 @@ interface ViewerState {
   shareOpen: boolean;
   uploadOpen: boolean;
   selectedPinId: string | null;
-  draft: { left: number; top: number; target: string | null } | null;
+  // left/top are content coords; sx/sy are the click's screen coords so the
+  // composer can open right where the user clicked.
+  draft: { left: number; top: number; target: string | null; sx?: number; sy?: number } | null;
   presence: PresenceMember[];
   onlineCount: number;
   selfClientId: string;

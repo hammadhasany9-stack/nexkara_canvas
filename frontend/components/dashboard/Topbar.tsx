@@ -22,7 +22,7 @@ export function Topbar() {
       <button
         onClick={() => openSettings("profile")}
         title="Your profile"
-        className="flex items-center gap-2.5 rounded-r-[10px] border-l border-border py-1 pl-3.5 pr-2 transition-colors hover:bg-[var(--surface-subtle)]"
+        className="lp-press flex items-center gap-2.5 rounded-r-[10px] border-l border-border py-1 pl-3.5 pr-2 transition-colors hover:bg-[var(--surface-subtle)]"
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-patina font-mono text-[0.62rem] font-bold text-white">
           {me ? initialsOf(me.display_name) : "…"}

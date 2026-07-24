@@ -8,8 +8,12 @@ import { cn } from "@/lib/utils";
  * non-interactive, sandboxed iframe scaled down to fit the card (the iframe
  * viewport is 4x the container, scaled to 0.25, so content lays out at a
  * desktop-ish width regardless of card size).
+ *
+ * Memoized on (id, version) so parent re-renders (dashboard refresh, hover
+ * state, presence updates) never remount the iframe — which is what caused the
+ * thumbnails to reload and flicker.
  */
-export function PreviewFrame({
+function PreviewFrameImpl({
   id,
   version,
   className,
@@ -18,6 +22,7 @@ export function PreviewFrame({
   version: number;
   className?: string;
 }) {
+  const [loaded, setLoaded] = React.useState(false);
   return (
     <div className={cn("relative overflow-hidden bg-white", className)}>
       <iframe
@@ -30,9 +35,21 @@ export function PreviewFrame({
         scrolling="no"
         loading="lazy"
         sandbox="allow-scripts"
-        className="pointer-events-none absolute left-0 top-0 origin-top-left"
-        style={{ width: "400%", height: "400%", transform: "scale(0.25)", border: 0 }}
+        onLoad={() => setLoaded(true)}
+        className="pointer-events-none absolute left-0 top-0 origin-top-left transition-opacity duration-300"
+        style={{
+          width: "400%",
+          height: "400%",
+          transform: "scale(0.25)",
+          border: 0,
+          opacity: loaded ? 1 : 0,
+        }}
       />
     </div>
   );
 }
+
+export const PreviewFrame = React.memo(
+  PreviewFrameImpl,
+  (a, b) => a.id === b.id && a.version === b.version && a.className === b.className,
+);

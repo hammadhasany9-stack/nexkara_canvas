@@ -17,7 +17,7 @@ const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
 ];
 
 export function Sidebar() {
-  const { section, setSection, counts, unread, toggleNotif } = useDashboard();
+  const { section, setSection, counts, unread, toggleNotif, personFilter, setPersonFilter } = useDashboard();
   const [people, setPeople] = React.useState<Person[]>([]);
   const notifRef = React.useRef<HTMLButtonElement>(null);
 
@@ -35,7 +35,7 @@ export function Sidebar() {
               key={id}
               onClick={() => setSection(id)}
               className={cn(
-                "dash-navitem flex h-9 items-center justify-between rounded-[9px] px-2.5 text-[0.84rem] font-medium",
+                "dash-navitem lp-press flex h-9 items-center justify-between rounded-[9px] px-2.5 text-[0.84rem] font-medium",
                 active ? "bg-brand-100 text-brand-700" : "text-text-body",
               )}
             >
@@ -50,7 +50,7 @@ export function Sidebar() {
         <button
           ref={notifRef}
           onClick={toggleNotif}
-          className="dash-navitem flex h-9 items-center gap-2.5 rounded-[9px] px-2.5 text-[0.84rem] font-medium text-text-body"
+          className="dash-navitem lp-press flex h-9 items-center gap-2.5 rounded-[9px] px-2.5 text-[0.84rem] font-medium text-text-body"
         >
           <Bell size={16} />
           <span className="flex-1 text-left">Notifications</span>
@@ -71,12 +71,23 @@ export function Sidebar() {
           Shared users
         </p>
         <div className="grid gap-0.5">
-          {people.slice(0, 8).map((p) => (
-            <div key={p.id} className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm">
-              <Avatar person={p} size={26} />
-              <span className="truncate text-text-body">{p.display_name}</span>
-            </div>
-          ))}
+          {people.slice(0, 8).map((p) => {
+            const active = personFilter?.id === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => setPersonFilter(active ? null : { id: p.id, name: p.display_name })}
+                title={`View prototypes shared by ${p.display_name}`}
+                className={cn(
+                  "dash-navitem lp-press flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-left text-sm",
+                  active ? "bg-brand-100 text-brand-700" : "text-text-body",
+                )}
+              >
+                <Avatar person={p} size={26} />
+                <span className="truncate">{p.display_name}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </aside>

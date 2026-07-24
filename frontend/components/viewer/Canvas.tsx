@@ -140,7 +140,7 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
         }
       } catch { /* */ }
     }
-    setDraft({ left: x, top: y + scrollY, target }); // store content coords
+    setDraft({ left: x, top: y + scrollY, target, sx: e.clientX, sy: e.clientY }); // content coords + screen anchor
   };
 
   const onMove = (e: React.MouseEvent) => {
@@ -208,7 +208,7 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
               <button
                 key={c.id}
                 onClick={(e) => { e.stopPropagation(); openPop(c.id, e.currentTarget); }}
-                className="pointer-events-auto absolute flex h-[26px] w-[26px] -translate-x-1/2 -translate-y-full items-center justify-center rounded-full rounded-bl-none font-mono text-[0.6rem] font-bold text-white"
+                className="lp-pin pointer-events-auto absolute flex h-[26px] w-[26px] -translate-x-1/2 -translate-y-full items-center justify-center rounded-full rounded-bl-none font-mono text-[0.6rem] font-bold text-white transition-transform hover:z-10 hover:!scale-110"
                 style={{
                   left: c.left, top: c.top,
                   background: pinColor(c.author?.id ?? c.id),
@@ -273,7 +273,7 @@ function PinPopover({
 
   return (
     <div
-      className="fixed z-30 w-[300px] rounded-xl border border-border bg-[var(--surface)] p-3 shadow-[var(--shadow-modal)]"
+      className="lp-pop fixed z-30 w-[300px] origin-top-left rounded-xl border border-border bg-[var(--surface)] p-3 shadow-[var(--shadow-modal)]"
       style={{ left, top }}
       onClick={(e) => e.stopPropagation()}
     >

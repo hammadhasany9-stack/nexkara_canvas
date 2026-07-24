@@ -10,8 +10,20 @@ export function DraftComposer() {
   React.useEffect(() => { setText(""); }, [draft]);
   if (!draft) return null;
 
+  // Open the composer right where the user clicked (falling back to centered).
+  const W = 320, H = 190;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1440;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 900;
+  const hasAnchor = typeof draft.sx === "number" && typeof draft.sy === "number";
+  const pos = hasAnchor
+    ? { left: Math.min(Math.max(12, draft.sx! + 12), vw - W - 12), top: Math.min(Math.max(84, draft.sy! + 12), vh - H - 12) }
+    : null;
+
   return (
-    <div className="pointer-events-auto absolute bottom-24 left-1/2 z-30 w-80 -translate-x-1/2 rounded-card border border-border bg-[var(--surface)] p-3 shadow-2xl">
+    <div
+      className="lp-pop pointer-events-auto z-30 w-80 rounded-card border border-border bg-[var(--surface)] p-3 shadow-2xl"
+      style={pos ? { position: "fixed", left: pos.left, top: pos.top } : { position: "absolute", left: "50%", bottom: 96, transform: "translateX(-50%)" }}
+    >
       <div className="mb-2 flex items-center gap-2">
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--surface-subtle)] text-[10px] font-bold text-text-muted">
           {me ? me.display_name.slice(0, 2).toUpperCase() : "YOU"}

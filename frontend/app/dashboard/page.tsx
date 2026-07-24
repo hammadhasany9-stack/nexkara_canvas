@@ -24,7 +24,7 @@ const TITLES: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const { view, setView, section, query, prototypes, loading, me, loadMe, refresh, loadNotifications, openSettings } =
+  const { view, setView, section, query, prototypes, loading, me, loadMe, refresh, loadNotifications, openSettings, personFilter, setPersonFilter } =
     useDashboard();
 
   React.useEffect(() => {
@@ -40,7 +40,19 @@ export default function DashboardPage() {
     if (me?.must_change_password) openSettings("password");
   }, [me, openSettings]);
 
-  const title = query ? `Results for “${query}”` : TITLES[section] ?? "Home";
+  // When a collaborator is picked in the sidebar, narrow to the prototypes that
+  // involve them (owned or shared).
+  const shown = personFilter
+    ? prototypes.filter(
+        (p) => p.owner.id === personFilter.id || p.people.some((u) => u.id === personFilter.id),
+      )
+    : prototypes;
+
+  const title = personFilter
+    ? `Shared by ${personFilter.name}`
+    : query
+    ? `Results for “${query}”`
+    : TITLES[section] ?? "Home";
 
   return (
     <div className="min-h-screen bg-bg">
@@ -52,7 +64,17 @@ export default function DashboardPage() {
 
           <div className="px-6 py-8 lg:px-8">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-text-strong">{title}</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-text-strong">{title}</h2>
+                {personFilter && (
+                  <button
+                    onClick={() => setPersonFilter(null)}
+                    className="lp-press flex items-center gap-1 rounded-full border border-border bg-[var(--surface)] px-2.5 py-1 text-xs font-medium text-text-muted transition-colors hover:text-text-strong"
+                  >
+                    Clear <span aria-hidden>×</span>
+                  </button>
+                )}
+              </div>
               <div className="flex rounded-control border border-border bg-[var(--surface)] p-0.5">
                 <Toggle active={view === "grid"} onClick={() => setView("grid")} label="Grid view">
                   <LayoutGrid size={16} />
@@ -65,11 +87,11 @@ export default function DashboardPage() {
 
             {loading && prototypes.length === 0 ? (
               <div className="py-16 text-center text-sm text-text-muted">Loading…</div>
-            ) : prototypes.length === 0 ? (
+            ) : shown.length === 0 ? (
               <EmptyState hasQuery={!!query} />
             ) : view === "grid" ? (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(258px,1fr))] gap-4">
-                {prototypes.map((p) => (
+                {shown.map((p) => (
                   <PrototypeCard key={p.id} p={p} />
                 ))}
               </div>
@@ -88,7 +110,7 @@ export default function DashboardPage() {
                   <span>Users</span>
                   <span className="text-right">Actions</span>
                 </div>
-                {prototypes.map((p) => (
+                {shown.map((p) => (
                   <PrototypeRow key={p.id} p={p} />
                 ))}
               </div>

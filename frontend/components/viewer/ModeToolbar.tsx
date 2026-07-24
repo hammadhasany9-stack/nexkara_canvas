@@ -32,7 +32,7 @@ export function ModeToolbar() {
 function Tool({ active, onClick, tip, badge, children }: { active: boolean; onClick: () => void; tip: string; badge?: number; children: React.ReactNode }) {
   return (
     <button onClick={onClick} title={tip}
-      className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+      className={cn("lp-press relative flex h-10 w-10 items-center justify-center rounded-xl transition-[background,color,transform] duration-150",
         active ? "bg-brand-100 text-brand-700" : "text-text-muted hover:bg-[var(--surface-subtle)] hover:text-text-strong")}>
       {children}
       {badge != null && badge > 0 && (

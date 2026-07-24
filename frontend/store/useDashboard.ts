@@ -15,6 +15,7 @@ interface DashboardState {
   prototypes: Prototype[];
   counts: Counts;
   loading: boolean;
+  personFilter: { id: string; name: string } | null;
 
   notifications: Notification[];
   unread: number;
@@ -31,6 +32,7 @@ interface DashboardState {
   setView: (v: "grid" | "list") => void;
   setSection: (s: Section) => void;
   setQuery: (q: string) => void;
+  setPersonFilter: (p: { id: string; name: string } | null) => void;
 
   loadMe: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -57,6 +59,7 @@ export const useDashboard = create<DashboardState>((set, get) => ({
   prototypes: [],
   counts: { home: 0, recents: 0, shared: 0, trash: 0 },
   loading: false,
+  personFilter: null,
   notifications: [],
   unread: 0,
 
@@ -70,7 +73,12 @@ export const useDashboard = create<DashboardState>((set, get) => ({
 
   setView: (view) => set({ view }),
   setSection: (section) => {
-    set({ section });
+    set({ section, personFilter: null });
+    get().refresh();
+  },
+  setPersonFilter: (personFilter) => {
+    // Show every prototype this collaborator is on (shared with them or by them).
+    set({ personFilter, section: personFilter ? "home" : get().section, query: "" });
     get().refresh();
   },
   setQuery: (query) => {

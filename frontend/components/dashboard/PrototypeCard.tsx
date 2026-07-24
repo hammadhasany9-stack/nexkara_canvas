@@ -94,7 +94,7 @@ function Act({ title, onClick, children }: { title: string; onClick: () => void;
     <button
       title={title}
       onClick={onClick}
-      className="flex h-8 w-8 items-center justify-center rounded-control border border-border bg-[var(--surface)]/90 text-text-muted backdrop-blur hover:text-text-strong"
+      className="lp-iconbtn flex h-8 w-8 items-center justify-center rounded-control border border-border bg-[var(--surface)]/90 text-text-muted backdrop-blur transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-600"
     >
       {children}
     </button>
