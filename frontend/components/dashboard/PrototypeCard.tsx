@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { MessageSquare, Pencil, RotateCcw, Share2, Trash2 } from "lucide-react";
 import { apiDelete, apiPost } from "@/lib/api";
+import { toast } from "@/store/useToast";
 import { relativeTime } from "@/lib/format";
 import type { Prototype } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
 import { AvatarStack } from "@/components/ui/avatar";
+import { PreviewFrame } from "./PreviewFrame";
 
 export function PrototypeCard({ p }: { p: Prototype }) {
   const router = useRouter();
@@ -21,27 +23,26 @@ export function PrototypeCard({ p }: { p: Prototype }) {
       title: "Move to trash?",
       body: `“${p.name}” will be moved to Trash. You can restore it later.`,
       label: "Move to trash",
-      onConfirm: async () => { await apiPost(`/prototypes/${p.id}/trash`); refresh(); },
+      onConfirm: async () => { await apiPost(`/prototypes/${p.id}/trash`); toast.success(`“${p.name}” moved to Trash.`); refresh(); },
     });
-  const restore = async () => { await apiPost(`/prototypes/${p.id}/restore`); refresh(); };
+  const restore = async () => { await apiPost(`/prototypes/${p.id}/restore`); toast.success(`“${p.name}” restored.`); refresh(); };
   const remove = () =>
     askConfirm({
       title: "Delete permanently?",
       body: `“${p.name}” will be permanently deleted. This cannot be undone.`,
       label: "Delete permanently",
-      onConfirm: async () => { await apiDelete(`/prototypes/${p.id}`); refresh(); },
+      onConfirm: async () => { await apiDelete(`/prototypes/${p.id}`); toast.success(`“${p.name}” deleted.`); refresh(); },
     });
 
   return (
     <div className="dash-card group relative overflow-hidden rounded-[14px] border border-border bg-[var(--surface)] transition-shadow hover:shadow-[var(--shadow-md)]">
-      {/* thumbnail */}
+      {/* thumbnail — live preview of the uploaded prototype */}
       <button onClick={open} className="block w-full">
-        <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-[var(--surface-subtle)]">
-          <span className="absolute left-2.5 top-2.5 rounded-md bg-[var(--surface)]/80 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-muted ring-1 ring-border">
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--surface-subtle)]">
+          <PreviewFrame id={p.id} version={p.version} className="h-full w-full" />
+          <span className="absolute left-2.5 top-2.5 z-[1] rounded-md bg-[var(--surface)]/80 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-text-muted ring-1 ring-border backdrop-blur">
             {p.type}
           </span>
-          {/* no-preview frame */}
-          <div className="h-[46%] w-[62%] translate-y-2 rounded-t-lg border border-border/70 bg-[var(--surface)]/40" />
         </div>
       </button>
 

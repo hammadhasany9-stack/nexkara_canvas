@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Upload } from "lucide-react";
 import { ApiError, apiUpload } from "@/lib/api";
+import { toast } from "@/store/useToast";
 import type { Prototype } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
 import { Modal } from "@/components/ui/modal";
@@ -55,6 +56,7 @@ export function UploadModal() {
       const created = await apiUpload<Prototype>("/prototypes", form);
       await refresh();
       closeUpload();
+      toast.success(`“${created.name}” uploaded.`);
       openShare(created, true);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Upload failed.");

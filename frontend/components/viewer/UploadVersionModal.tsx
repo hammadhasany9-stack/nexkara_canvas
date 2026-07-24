@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Upload } from "lucide-react";
 import { ApiError, apiGet, apiUpload } from "@/lib/api";
+import { toast } from "@/store/useToast";
 import { useViewer, type Version } from "@/store/useViewer";
 import { Modal } from "@/components/ui/modal";
 import { Banner } from "@/components/auth/Banner";
@@ -36,7 +37,7 @@ export function UploadVersionModal() {
       set({ versions });
       const newest = versions[0]?.version;
       closeUpload();
-      if (newest) await pickVersion(newest);
+      if (newest) { await pickVersion(newest); toast.success(`Version ${newest} uploaded.`); }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Upload failed.");
     } finally { setLoading(false); }

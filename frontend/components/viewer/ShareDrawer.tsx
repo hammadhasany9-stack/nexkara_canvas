@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Download, FileText, Link2, X } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api";
+import { toast } from "@/store/useToast";
 import type { Person } from "@/lib/types";
 import { useViewer } from "@/store/useViewer";
 import { Avatar } from "@/components/ui/avatar";
@@ -30,11 +31,12 @@ export function ShareDrawer() {
   const add = (p: Person) => { setInvited((v) => [...v, p]); setQ(""); setSuggestions([]); };
   const send = async () => {
     await Promise.all(invited.map((p) => apiPost(`/prototypes/${id}/members`, { user_id: p.id, access: "commenter" }).catch(() => {})));
+    toast.success(invited.length === 1 ? `Invited ${invited[0].display_name}.` : `Invited ${invited.length} people.`);
     setSent(true); setTimeout(() => { setSent(false); setInvited([]); setMessage(""); }, 1800);
   };
   const copyLink = async () => {
     const r = await apiPost<{ url: string }>(`/prototypes/${id}/share-link`);
-    try { await navigator.clipboard.writeText(r.url); } catch { /* */ }
+    try { await navigator.clipboard.writeText(r.url); toast.success("Share link copied."); } catch { /* */ }
     setCopied(true); setTimeout(() => setCopied(false), 1600);
   };
   const printPdf = () => {

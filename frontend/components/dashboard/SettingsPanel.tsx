@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ApiError, apiDelete, apiGet, apiPost } from "@/lib/api";
 import type { AdminUser } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
+import { toast } from "@/store/useToast";
 import { Modal } from "@/components/ui/modal";
 import { Banner } from "@/components/auth/Banner";
 import { PasswordField } from "@/components/auth/PasswordField";
@@ -85,7 +86,7 @@ function ProfileTab() {
   const me = useDashboard((s) => s.me);
   const readCls = cn(inputCls, "cursor-default text-text-body opacity-90");
   return (
-    <div className="max-w-2xl">
+    <div className="mx-auto max-w-2xl">
       <div className="mb-6 flex items-center gap-4">
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-patina font-mono text-lg font-bold text-white">
           {me ? initialsOf(me.display_name) : "…"}
@@ -133,12 +134,13 @@ function PasswordTab() {
     try {
       await apiPost("/account/password", { current_password: cur, new_password: next });
       setOk("Password updated."); setCur(""); setNext(""); setConfirm("");
+      toast.success("Password updated.");
       loadMe();
     } catch (e) { setError(e instanceof ApiError ? e.message : "Could not update password."); }
   };
 
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto max-w-3xl">
       {me?.must_change_password && (
         <div className="mb-5"><Banner kind="error">You&apos;re using a temporary password. Set a new one to continue.</Banner></div>
       )}
@@ -179,15 +181,28 @@ function PasswordTab() {
 
 function UsersTab() {
   const me = useDashboard((s) => s.me);
+  const askConfirm = useDashboard((s) => s.askConfirm);
   const [users, setUsers] = React.useState<AdminUser[]>([]);
   const [addOpen, setAddOpen] = React.useState(false);
   const load = React.useCallback(async () => setUsers(await apiGet<AdminUser[]>("/users")), []);
   React.useEffect(() => { load(); }, [load]);
-  const resend = async (id: string) => { await apiPost(`/users/${id}/resend-invite`); };
-  const remove = async (id: string) => { await apiDelete(`/users/${id}`); load(); };
+  const resend = async (u: AdminUser) => {
+    try { await apiPost(`/users/${u.id}/resend-invite`); toast.success(`Invite re-sent to ${u.email}.`); }
+    catch { toast.error("Could not resend the invite."); }
+  };
+  const remove = (u: AdminUser) =>
+    askConfirm({
+      title: "Remove user?",
+      body: `“${u.display_name}” will lose access to this workspace. You can invite them again later.`,
+      label: "Remove user",
+      onConfirm: async () => {
+        try { await apiDelete(`/users/${u.id}`); toast.success(`${u.display_name} removed.`); load(); }
+        catch { toast.error("Could not remove the user."); }
+      },
+    });
 
   return (
-    <div className="max-w-4xl">
+    <div className="mx-auto max-w-4xl">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-text-strong">Users &amp; Access Control</h2>
@@ -217,10 +232,10 @@ function UsersTab() {
               </span>
             </span>
             <span className="flex items-center justify-end gap-1.5">
-              <button title="Resend invite" onClick={() => resend(u.id)}
+              <button title="Resend invite" onClick={() => resend(u)}
                 className="lp-iconbtn flex h-8 w-8 items-center justify-center rounded-control text-text-muted hover:text-brand-600"><Mail size={15} /></button>
               {u.id !== me?.id && (
-                <button title="Remove" onClick={() => remove(u.id)}
+                <button title="Remove" onClick={() => remove(u)}
                   className="lp-iconbtn flex h-8 w-8 items-center justify-center rounded-control text-text-faint hover:text-danger"><Trash2 size={15} /></button>
               )}
             </span>
@@ -256,13 +271,18 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
         access_method: method === "invite" ? "invite" : "temp_password",
         password: method === "temp" ? pw : undefined,
       });
+      toast.success(
+        method === "invite"
+          ? `Invite sent to ${email}.`
+          : `${name} added — they'll set a new password on first sign-in.`,
+      );
       onAdded();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not add user.");
     } finally { setLoading(false); }
   };
 
-  const ready = name && email && (method === "invite" || pw);
+  const ready = !!(name && email && (method === "invite" || passwordScore(pw).allOk));
   const submitLabel = method === "invite" ? "Send invite" : "Add & send invite";
 
   return (
@@ -287,10 +307,11 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
         </div>
 
         {method === "temp" && (
-          <div className="grid gap-1.5">
+          <div className="grid gap-2">
             <div className="flex items-center justify-between"><span className="text-sm font-medium text-text-body">Temporary password</span>
               <button type="button" onClick={generate} className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700"><RefreshCw size={12} /> Generate</button></div>
             <input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Set an initial password" className={inputCls} />
+            <PasswordStrength value={pw} />
           </div>
         )}
 
@@ -313,5 +334,46 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
       className={cn("whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium", active ? "border-brand-600 text-brand-600" : "border-border text-text-muted hover:text-text-strong")}>
       {children}
     </button>
+  );
+}
+
+// Shared password rules used by the temp-password field.
+function passwordScore(pw: string) {
+  const rules = [
+    { label: "At least 8 characters", ok: pw.length >= 8 },
+    { label: "An uppercase letter", ok: /[A-Z]/.test(pw) },
+    { label: "A number", ok: /\d/.test(pw) },
+    { label: "A symbol", ok: /[^A-Za-z0-9]/.test(pw) },
+  ];
+  const met = rules.filter((r) => r.ok).length;
+  // Require the first three (backend rule); the symbol only boosts strength.
+  const allOk = rules[0].ok && rules[1].ok && rules[2].ok;
+  return { rules, met, allOk };
+}
+
+function PasswordStrength({ value }: { value: string }) {
+  const { rules, met } = passwordScore(value);
+  const pct = value ? (met / rules.length) * 100 : 0;
+  const level = met <= 1 ? "Weak" : met === 2 ? "Fair" : met === 3 ? "Good" : "Strong";
+  const barColor = met <= 1 ? "bg-danger" : met === 2 ? "bg-amber-500" : "bg-brand-600";
+  return (
+    <div className="grid gap-2">
+      <div className="flex items-center gap-2">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--surface-subtle)]">
+          <div className={cn("h-full rounded-full transition-all duration-200", barColor)} style={{ width: `${pct}%` }} />
+        </div>
+        <span className="w-12 shrink-0 text-right text-[11px] font-semibold text-text-muted">{value ? level : ""}</span>
+      </div>
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+        {rules.map((r) => (
+          <li key={r.label} className={cn("flex items-center gap-1.5 text-xs", r.ok ? "text-brand-600" : "text-text-faint")}>
+            <span className={cn("flex h-3.5 w-3.5 items-center justify-center rounded-full", r.ok ? "bg-brand-100 text-brand-600" : "bg-[var(--surface-subtle)]")}>
+              {r.ok ? <ShieldCheck size={9} /> : <Minus size={9} />}
+            </span>
+            {r.label}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

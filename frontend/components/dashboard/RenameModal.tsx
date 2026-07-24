@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ApiError, apiPatch } from "@/lib/api";
+import { toast } from "@/store/useToast";
 import { useDashboard } from "@/store/useDashboard";
 import { Banner } from "@/components/auth/Banner";
 import { Modal } from "@/components/ui/modal";
@@ -41,6 +42,7 @@ export function RenameModal() {
         layouts: layouts.length ? layouts : [...LAYOUTS],
       });
       await refresh();
+      toast.success("Changes saved.");
       closeRename();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Save failed.");

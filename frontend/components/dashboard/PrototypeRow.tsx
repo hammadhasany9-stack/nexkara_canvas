@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { Pencil, RotateCcw, Share2, Trash2 } from "lucide-react";
 import { apiDelete, apiPost } from "@/lib/api";
+import { toast } from "@/store/useToast";
 import { relativeTime } from "@/lib/format";
 import type { Prototype } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
 import { cn } from "@/lib/utils";
+import { PreviewFrame } from "./PreviewFrame";
 
 // Shared column template so the header row and body rows stay aligned.
 export const ROW_COLS =
@@ -34,11 +36,13 @@ export function PrototypeRow({ p }: { p: Prototype }) {
       label: "Move to trash",
       onConfirm: async () => {
         await apiPost(`/prototypes/${p.id}/trash`);
+        toast.success(`“${p.name}” moved to Trash.`);
         refresh();
       },
     });
   const restore = async () => {
     await apiPost(`/prototypes/${p.id}/restore`);
+    toast.success(`“${p.name}” restored.`);
     refresh();
   };
   const remove = () =>
@@ -48,6 +52,7 @@ export function PrototypeRow({ p }: { p: Prototype }) {
       label: "Delete permanently",
       onConfirm: async () => {
         await apiDelete(`/prototypes/${p.id}`);
+        toast.success(`“${p.name}” deleted.`);
         refresh();
       },
     });
@@ -65,10 +70,10 @@ export function PrototypeRow({ p }: { p: Prototype }) {
       {/* Name */}
       <div className="flex min-w-0 items-center gap-3">
         <span
-          className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg font-mono text-[8px] font-bold tracking-wider text-white"
+          className="relative grid h-[30px] w-[44px] shrink-0 place-items-center overflow-hidden rounded-md ring-1 ring-border"
           style={{ background: hueFor(p.id) }}
         >
-          {p.type.toUpperCase()}
+          <PreviewFrame id={p.id} version={p.version} className="absolute inset-0 h-full w-full" />
         </span>
         <span className="truncate text-[0.9rem] font-semibold text-text-strong">{p.name}</span>
       </div>

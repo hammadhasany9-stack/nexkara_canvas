@@ -18,7 +18,7 @@ function pinColor(id: string): string {
 
 export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number } | null) => void }) {
   const {
-    id, version, device, mode, comments, filter, selectedPinId,
+    id, version, device, mode, comments, filter, selectedPinId, zoom,
     effScale, setFit, setDraft, selectPin, presence, selfClientId, reply, resolve,
   } = useViewer();
   const scale = effScale();
@@ -38,7 +38,12 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const stageRef = React.useRef<HTMLDivElement>(null);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = React.useState(900);
+  // frameH: the on-screen height of the prototype frame (the prototype scrolls
+  // *inside* it, so the frame stays within the viewport and the canvas never
+  // grows an outer scrollbar). scrollY: the prototype's internal scroll offset,
+  // used to keep comment pins anchored to the content as it scrolls.
+  const [frameH, setFrameH] = React.useState(700);
+  const [scrollY, setScrollY] = React.useState(0);
   const [iframeSrc, setIframeSrc] = React.useState<string>("");
   const [sandboxed, setSandboxed] = React.useState(false);
 
@@ -67,25 +72,30 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
     return () => { cancelled = true; if (revoke) URL.revokeObjectURL(revoke); };
   }, [id, version]);
 
-  // Cross-origin sandbox reports its height via postMessage.
+  // Cross-origin sandbox reports its internal scroll via postMessage so pins
+  // still track the content even when we can't read its DOM.
   React.useEffect(() => {
     const onMsg = (e: MessageEvent) => {
-      const h = (e.data && typeof e.data === "object" && e.data.__nx_height) as number | undefined;
-      if (typeof h === "number" && h > 0) setHeight(Math.max(600, h));
+      const y = (e.data && typeof e.data === "object" && e.data.__nx_scroll) as number | undefined;
+      if (typeof y === "number") setScrollY(y);
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, []);
 
-  // fit-to-width
+  // Fit the frame to the viewport: scale to width, and size the frame's on-screen
+  // height to the available space so the canvas itself never scrolls.
   const reflow = React.useCallback(() => {
     const vp = viewportRef.current;
     if (!vp) return;
     const avail = vp.clientWidth - 80;
-    setFit(Math.min(1, avail / deviceWidth));
-  }, [deviceWidth, setFit]);
+    const nextFit = Math.min(1, avail / deviceWidth);
+    setFit(nextFit);
+    const s = zoom ?? nextFit;
+    setFrameH(Math.max(360, (vp.clientHeight - 32) / s));
+  }, [deviceWidth, setFit, zoom]);
 
-  React.useEffect(() => { reflow(); }, [reflow, device]);
+  React.useEffect(() => { reflow(); }, [reflow, device, zoom]);
   React.useEffect(() => {
     const on = () => reflow();
     window.addEventListener("resize", on);
@@ -93,53 +103,49 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
   }, [reflow]);
 
   const onIframeLoad = () => {
-    if (sandboxed) return; // cross-origin: height via postMessage, no DOM access
-    const measure = () => {
-      try {
-        const doc = iframeRef.current?.contentDocument;
-        if (doc) setHeight(Math.max(600, doc.body.scrollHeight));
-      } catch { /* cross-origin */ }
-    };
-    measure();
-    setTimeout(measure, 500);
-    // Track the pointer inside the (same-origin blob) prototype so remote
-    // cursors follow the mouse over the rendered page, not just the chrome.
+    setScrollY(0);
+    if (sandboxed) return; // cross-origin: scroll via postMessage, no DOM access
     try {
+      const win = iframeRef.current?.contentWindow;
       const doc = iframeRef.current?.contentDocument;
+      if (win) win.addEventListener("scroll", () => setScrollY(win.scrollY || 0), { passive: true });
+      // Track the pointer inside the prototype so remote cursors follow the
+      // mouse over the rendered page (content coords account for scroll).
       if (doc) {
         doc.addEventListener("mousemove", (e: MouseEvent) => {
-          sendCursor({ x: e.clientX, y: e.clientY });
+          sendCursor({ x: e.clientX, y: e.clientY + (win?.scrollY || 0) });
         });
         doc.addEventListener("mouseleave", () => sendCursor(null));
       }
     } catch { /* cross-origin */ }
   };
 
-  // comment placement + cursor tracking (coords in unscaled stage space)
-  const stageCoords = (e: React.MouseEvent) => {
+  // Frame-relative position (what the iframe viewport sees), and content
+  // position (frame-relative + internal scroll, used to anchor pins).
+  const framePos = (e: React.MouseEvent) => {
     const rect = stageRef.current!.getBoundingClientRect();
     return { x: (e.clientX - rect.left) / scale, y: (e.clientY - rect.top) / scale };
   };
 
   const onCatchClick = (e: React.MouseEvent) => {
-    const { x, y } = stageCoords(e);
+    const { x, y } = framePos(e);
     let target: string | null = null;
     if (!sandboxed) {
       try {
         const doc = iframeRef.current?.contentDocument;
-        const el = doc?.elementFromPoint(x, y) as HTMLElement | null;
+        const el = doc?.elementFromPoint(x, y) as HTMLElement | null; // viewport coords
         if (el) {
           const t = (el.getAttribute("data-el") || el.textContent || el.tagName).trim();
           target = t.slice(0, 60);
         }
       } catch { /* */ }
     }
-    setDraft({ left: x, top: y, target });
+    setDraft({ left: x, top: y + scrollY, target }); // store content coords
   };
 
   const onMove = (e: React.MouseEvent) => {
-    const { x, y } = stageCoords(e);
-    sendCursor({ x, y });
+    const { x, y } = framePos(e);
+    sendCursor({ x, y: y + scrollY });
   };
 
   const visiblePins = comments.filter((c) => c.version === version);
@@ -172,11 +178,11 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
           />
         );
       })()}
-      <div className="flex min-h-full w-full justify-center py-10">
+      <div className="flex h-full w-full justify-center p-4">
         <div
           ref={stageRef}
           className="relative"
-          style={{ width: deviceWidth, height, transform: `scale(${scale})`, transformOrigin: "top center" }}
+          style={{ width: deviceWidth, height: frameH, transform: `scale(${scale})`, transformOrigin: "top center" }}
         >
           <iframe
             ref={iframeRef}
@@ -185,7 +191,7 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
             onLoad={onIframeLoad}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
             className="block h-full w-full rounded-lg border border-border bg-white shadow-xl"
-            style={{ width: deviceWidth, height }}
+            style={{ width: deviceWidth, height: frameH }}
           />
 
           {/* click-catcher in comment mode */}
@@ -193,6 +199,9 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
             <div className="absolute inset-0 cursor-crosshair" onClick={onCatchClick} />
           )}
 
+          {/* overlays clip to the frame and translate with the prototype's scroll */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg">
+          <div className="absolute inset-0" style={{ transform: `translateY(${-scrollY}px)` }}>
           {/* pins */}
           <div className="pointer-events-none absolute inset-0">
             {visiblePins.map((c) => (
@@ -234,6 +243,8 @@ export function Canvas({ sendCursor }: { sendCursor: (c: { x: number; y: number 
               </div>
             ))}
           </div>
+          </div>{/* /translate */}
+          </div>{/* /clip */}
         </div>
       </div>
     </div>

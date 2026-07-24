@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { apiDelete, apiGet, apiPost } from "@/lib/api";
+import { toast } from "@/store/useToast";
 import type { Member, Person } from "@/lib/types";
 import { useDashboard } from "@/store/useDashboard";
 import { Avatar } from "@/components/ui/avatar";
@@ -49,7 +50,7 @@ export function ShareModal() {
     await apiDelete(`/prototypes/${id}/members/${userId}`); loadMembers();
   };
   const copy = async () => {
-    try { await navigator.clipboard.writeText(link); } catch { /* ignore */ }
+    try { await navigator.clipboard.writeText(link); toast.success("Share link copied."); } catch { /* ignore */ }
     setCopied(true); setTimeout(() => setCopied(false), 1600);
   };
   const finish = () => {

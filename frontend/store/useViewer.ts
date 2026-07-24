@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { apiGet, apiPost } from "@/lib/api";
+import { toast } from "@/store/useToast";
 import type { Prototype } from "@/lib/types";
 
 export interface Reply { id: string; author: { id: string; display_name: string; initials: string } | null; body: string; created_at: string; }
@@ -115,6 +116,7 @@ export const useViewer = create<ViewerState>((set, get) => ({
     await apiPost(`/prototypes/${id}/comments`, { version, left: draft.left, top: draft.top, target: draft.target, body });
     set({ draft: null });
     await get().loadComments();
+    toast.success("Comment added.");
   },
 
   reply: async (commentId, body) => {
@@ -124,6 +126,7 @@ export const useViewer = create<ViewerState>((set, get) => ({
   resolve: async (commentId, resolved) => {
     await apiPost(`/comments/${commentId}/resolve`, { resolved });
     await get().loadComments();
+    toast.success(resolved ? "Comment resolved." : "Comment reopened.");
   },
 
   applyRemoteComment: (c) => {
