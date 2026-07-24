@@ -17,7 +17,7 @@ export function PasswordField(props: InputProps) {
         type="button"
         onClick={() => setShow((s) => !s)}
         aria-label={show ? "Hide password" : "Show password"}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-faint hover:text-text-muted"
+        className="lp-iconbtn absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-text-faint hover:text-brand-600"
         tabIndex={-1}
       >
         {show ? <EyeOff size={18} /> : <Eye size={18} />}

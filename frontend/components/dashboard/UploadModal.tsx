@@ -75,8 +75,8 @@ export function UploadModal() {
         <div className="flex w-full items-center justify-between">
           <span className="text-sm text-text-faint">You can share after uploading</span>
           <div className="flex gap-2">
-            <button onClick={closeUpload} className="rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body hover:bg-[var(--surface)]">Cancel</button>
-            <button onClick={submit} disabled={loading} className="rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60">
+            <button onClick={closeUpload} className="lp-press rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body transition-colors hover:bg-[var(--surface)]">Cancel</button>
+            <button onClick={submit} disabled={loading} className="lp-press rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60">
               {loading ? "Saving…" : "Save details"}
             </button>
           </div>
@@ -159,7 +159,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+        "lp-press rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
         active ? "border-brand-600 text-brand-600" : "border-border text-text-muted hover:text-text-strong",
       )}
     >

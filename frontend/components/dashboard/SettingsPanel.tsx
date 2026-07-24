@@ -56,7 +56,7 @@ export function SettingsPanel() {
             </button>
           ))}
         </nav>
-        <button onClick={logout} className="mt-auto flex items-center gap-2 p-4 text-sm font-semibold text-danger hover:underline">
+        <button onClick={logout} className="lp-press mt-auto flex items-center gap-2 p-4 text-sm font-semibold text-danger transition-colors hover:bg-danger/5 hover:underline">
           <LogOut size={16} /> Log out
         </button>
       </aside>
@@ -172,7 +172,7 @@ function PasswordTab() {
           </div>
         </div>
         <div className="flex justify-end border-t border-border p-5">
-          <button onClick={save} disabled={!cur || !allOk} className="rounded-control bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60">Update password</button>
+          <button onClick={save} disabled={!cur || !allOk} className="lp-press rounded-control bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60">Update password</button>
         </div>
       </div>
     </div>
@@ -210,7 +210,7 @@ function UsersTab() {
             Manage who can access this workspace. Admins control users and settings; members review and comment on prototypes.
           </p>
         </div>
-        <button onClick={() => setAddOpen(true)} className="flex shrink-0 items-center gap-2 rounded-control bg-[#1b2330] px-4 py-2.5 text-sm font-semibold text-white hover:brightness-125">
+        <button onClick={() => setAddOpen(true)} className="lp-press flex shrink-0 items-center gap-2 rounded-control bg-[#1b2330] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-125">
           <UserPlus size={15} /> Add User
         </button>
       </div>
@@ -287,8 +287,8 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 
   return (
     <Modal open onClose={onClose} title="Add a user" size="md"
-      footer={<><button onClick={onClose} className="rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body">Cancel</button>
-        <button onClick={submit} disabled={!ready || loading} className="rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{loading ? "Working…" : submitLabel}</button></>}>
+      footer={<><button onClick={onClose} className="lp-press rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body transition-colors hover:bg-[var(--surface)]">Cancel</button>
+        <button onClick={submit} disabled={!ready || loading} className="lp-press rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60">{loading ? "Working…" : submitLabel}</button></>}>
       <div className="grid gap-4">
         {error && <Banner kind="error">{error}</Banner>}
         <label className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Name</span><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jordan Lee" className={inputCls} /></label>
@@ -296,7 +296,7 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 
         <div className="grid gap-1.5"><span className="text-sm font-medium text-text-body">Role</span>
           <div className="flex gap-2">{(["member", "admin"] as const).map((r) => (
-            <button key={r} type="button" onClick={() => setRole(r)} className={cn("rounded-full border px-4 py-1.5 text-sm font-medium capitalize", role === r ? "border-brand-600 text-brand-600" : "border-border text-text-muted")}>{r}</button>))}
+            <button key={r} type="button" onClick={() => setRole(r)} className={cn("lp-press rounded-full border px-4 py-1.5 text-sm font-medium capitalize transition-colors", role === r ? "border-brand-600 text-brand-600" : "border-border text-text-muted")}>{r}</button>))}
           </div></div>
 
         <div className="grid gap-1.5"><span className="text-sm font-medium text-text-body">How should they get access?</span>
@@ -331,7 +331,7 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick}
-      className={cn("whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium", active ? "border-brand-600 text-brand-600" : "border-border text-text-muted hover:text-text-strong")}>
+      className={cn("lp-press whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium transition-colors", active ? "border-brand-600 text-brand-600" : "border-border text-text-muted hover:text-text-strong")}>
       {children}
     </button>
   );

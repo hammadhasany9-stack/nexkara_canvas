@@ -6,20 +6,21 @@ import { Home, Maximize, Minus, Monitor, Plus, Smartphone, SquareArrowOutUpRight
 import { DEVICE_WIDTH, useViewer } from "@/store/useViewer";
 import { cn } from "@/lib/utils";
 
-// Solid dark-blue (secondary) bar with a forced dark-theme foreground so the
-// controls read crisply in both light and dark app themes.
-const DARK_BAR: React.CSSProperties = {
-  background: "#0f1c30",
-  "--surface": "#152032",
-  "--surface-subtle": "#1b2942",
-  "--border": "rgba(255,255,255,.14)",
-  "--text-strong": "#f3f6fb",
-  "--text-body": "#dce3ef",
-  "--text-muted": "#9fadc4",
-  "--text-faint": "#8494ad",
+// The canvas nav bar uses our secondary colour — patina blue — as a solid,
+// prominent bar with a forced light foreground so its controls read crisply in
+// both light and dark app themes.
+const BAR_STYLE = {
+  background: "#14618c",
+  "--surface": "#1b6c99",
+  "--surface-subtle": "#2278a8",
+  "--border": "rgba(255,255,255,.20)",
+  "--text-strong": "#ffffff",
+  "--text-body": "#eaf2f8",
+  "--text-muted": "#c3d7e6",
+  "--text-faint": "#9dbdd2",
   "--brand-600": "#12a986",
   "--brand-700": "#35c4a2",
-  "--brand-50": "rgba(18,169,134,.16)",
+  "--brand-50": "rgba(255,255,255,.16)",
 } as React.CSSProperties;
 
 export function CanvasToolbar({ onFullscreen }: { onFullscreen: () => void }) {
@@ -29,7 +30,7 @@ export function CanvasToolbar({ onFullscreen }: { onFullscreen: () => void }) {
   const zoomLabel = zoom == null ? "Fit" : `${Math.round(scale * 100)}%`;
 
   return (
-    <div className="flex h-11 shrink-0 items-center gap-3 border-b border-border px-3 text-sm" style={DARK_BAR}>
+    <div className="flex h-11 shrink-0 items-center gap-3 border-b border-border px-3 text-sm" style={BAR_STYLE}>
       <button onClick={() => router.push("/dashboard")} title="Home"
         className="lp-iconbtn flex h-8 w-8 items-center justify-center rounded-control text-text-muted hover:bg-[var(--surface-subtle)] hover:text-text-strong">
         <Home size={16} />

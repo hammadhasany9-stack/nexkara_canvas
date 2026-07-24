@@ -60,7 +60,7 @@ export function CommentsSidebar() {
 function Tab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick}
-      className={cn("flex-1 border-b-2 py-2.5 text-center text-[0.86rem] font-medium", active ? "border-brand-600 text-brand-600" : "border-transparent text-text-muted hover:text-text-strong")}>
+      className={cn("lp-press flex-1 border-b-2 py-2.5 text-center text-[0.86rem] font-medium transition-colors", active ? "border-brand-600 text-brand-600" : "border-transparent text-text-muted hover:text-text-strong")}>
       {children}
     </button>
   );

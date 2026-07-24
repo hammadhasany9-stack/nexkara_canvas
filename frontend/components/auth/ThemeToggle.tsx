@@ -35,7 +35,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label="Toggle theme"
-      className="flex h-10 w-10 items-center justify-center rounded-control border border-border bg-surface text-text-muted transition-colors hover:text-text-strong"
+      className="lp-iconbtn flex h-10 w-10 items-center justify-center rounded-control border border-border bg-surface text-text-muted transition-colors hover:border-brand-600/40 hover:bg-surface-subtle hover:text-text-strong"
     >
       {dark ? <Sun size={18} /> : <Moon size={18} />}
     </button>

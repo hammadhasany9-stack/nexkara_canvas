@@ -140,8 +140,25 @@ body {
   transform: translateY(-3px);
 }
 
-/* Nav items + icon buttons share a subtle press feedback. */
-.dash-navitem,
+/* Every button transitions smoothly by default. */
+button {
+  transition: background-color 0.13s ease, color 0.13s ease,
+    border-color 0.13s ease, box-shadow 0.13s ease, opacity 0.13s ease;
+}
+
+/* Nav items (dashboard + settings sidebars) get a clear hover + press. */
+.dash-navitem {
+  transition: background 0.13s ease, color 0.13s ease, transform 0.1s ease;
+}
+.dash-navitem:hover {
+  background: var(--brand-50);
+  color: var(--text-strong);
+}
+.dash-navitem:active {
+  background: var(--brand-100);
+  transform: scale(0.99);
+}
+
 .lp-iconbtn {
   transition: background 0.13s ease, color 0.13s ease, border-color 0.13s ease,
     transform 0.1s ease;

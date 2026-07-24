@@ -135,7 +135,7 @@ function Toggle({ active, onClick, label, children }: { active: boolean; onClick
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-[6px] transition-colors",
+        "lp-press flex h-8 w-8 items-center justify-center rounded-[6px] transition-colors",
         active ? "bg-brand-100 text-brand-700" : "text-text-muted hover:text-text-strong",
       )}
     >

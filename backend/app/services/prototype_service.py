@@ -63,7 +63,7 @@ async def create_prototype(
 
 
 async def add_version(
-    db: AsyncSession, proto: Prototype, user: User, html: bytes
+    db: AsyncSession, proto: Prototype, user: User, html: bytes, label: str | None = None
 ) -> int:
     version = proto.current_version + 1
     key = _storage_key(proto.id, version)
@@ -75,6 +75,7 @@ async def add_version(
             storage_key=key,
             byte_size=len(html),
             created_by=user.id,
+            label=label or None,
         )
     )
     proto.current_version = version

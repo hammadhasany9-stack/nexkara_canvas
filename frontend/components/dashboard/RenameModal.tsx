@@ -56,7 +56,7 @@ export function RenameModal() {
       title="Edit prototype"
       footer={
         <>
-          <button onClick={closeRename} className="rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body">Cancel</button>
+          <button onClick={closeRename} className="lp-press rounded-control border border-border bg-[var(--surface-subtle)] px-4 py-2.5 text-sm font-semibold text-text-body transition-colors hover:bg-[var(--surface)]">Cancel</button>
           <button onClick={save} disabled={loading} className="rounded-control bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{loading ? "Saving…" : "Save changes"}</button>
         </>
       }
@@ -76,7 +76,7 @@ export function RenameModal() {
           <div className="flex gap-2">
             {LAYOUTS.map((l) => (
               <button key={l} type="button" onClick={() => toggle(l)}
-                className={cn("rounded-full border px-4 py-1.5 text-sm font-medium",
+                className={cn("lp-press rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
                   layouts.includes(l) ? "border-brand-600 text-brand-600" : "border-border text-text-muted hover:text-text-strong")}>
                 {l[0].toUpperCase() + l.slice(1)}
               </button>

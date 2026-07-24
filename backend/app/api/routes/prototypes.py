@@ -134,12 +134,20 @@ async def update_prototype(
 async def upload_version(
     prototype_id: uuid.UUID,
     file: UploadFile = File(...),
+    note: str = Form(""),
+    name: str = Form(""),
+    layouts: str = Form(""),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> PrototypeOut:
     proto, _ = await _load(db, user, prototype_id, AccessLevel.editor)
     data = await _read_upload(file)
-    await svc.add_version(db, proto, user, data)
+    await svc.add_version(db, proto, user, data, label=note.strip() or None)
+    if name.strip():
+        proto.name = name.strip()
+    if layouts.strip():
+        proto.layouts = _parse_layouts(layouts)
+    await db.commit()
     proto, _ = await svc.get_with_membership(db, user, prototype_id)
     return await svc.to_out(db, user, proto)
 
