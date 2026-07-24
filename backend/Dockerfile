@@ -17,6 +17,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY . .
 RUN pip install --upgrade pip && pip install .
 
+# Headless Chromium for the static prototype-card thumbnails (thumbnail_service).
+# The feature degrades gracefully (falls back to a live iframe preview) if this
+# step is removed, but installing the browser gives the flicker-free snapshots.
+RUN playwright install --with-deps chromium
+
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

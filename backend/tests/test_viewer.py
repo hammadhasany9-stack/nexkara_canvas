@@ -28,6 +28,41 @@ async def test_versions_list_and_content(admin_client):
     assert raw.status_code == 200 and b"Demo" in raw.content
 
 
+async def test_thumbnail_renders_and_caches(admin_client, monkeypatch):
+    """The thumbnail endpoint returns a PNG (rendering once, then serving cache)."""
+    from app.services import thumbnail_service
+
+    calls = {"n": 0}
+
+    async def fake_render(html: bytes):
+        calls["n"] += 1
+        return b"\x89PNG-fake"
+
+    monkeypatch.setattr(thumbnail_service, "_render_png", fake_render)
+
+    pid = (await _create(admin_client)).json()["id"]
+    r1 = await admin_client.get(f"/prototypes/{pid}/thumbnail")
+    assert r1.status_code == 200
+    assert r1.headers["content-type"] == "image/png"
+    r2 = await admin_client.get(f"/prototypes/{pid}/thumbnail")  # cache hit
+    assert r2.status_code == 200
+    assert calls["n"] == 1  # rendered only once; second request served from cache
+
+
+async def test_thumbnail_unavailable_falls_back(admin_client, monkeypatch):
+    """When no browser can render, the endpoint 404s so the client uses the iframe."""
+    from app.services import thumbnail_service
+
+    async def no_render(html: bytes):
+        return None
+
+    monkeypatch.setattr(thumbnail_service, "_render_png", no_render)
+
+    pid = (await _create(admin_client)).json()["id"]
+    r = await admin_client.get(f"/prototypes/{pid}/thumbnail")
+    assert r.status_code == 404
+
+
 async def test_comment_lifecycle(admin_client):
     pid = (await _create(admin_client)).json()["id"]
 

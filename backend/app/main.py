@@ -26,6 +26,8 @@ async def lifespan(app: FastAPI):
     await rooms.start()
     yield
     await rooms.stop()
+    from app.services import thumbnail_service
+    await thumbnail_service.shutdown()
 
 
 app = FastAPI(title="Nexkara Canvas API", version="0.1.0", lifespan=lifespan)

@@ -4,14 +4,10 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Live thumbnail of an uploaded prototype. Renders the actual HTML in a
- * non-interactive, sandboxed iframe scaled down to fit the card (the iframe
- * viewport is 4x the container, scaled to 0.25, so content lays out at a
- * desktop-ish width regardless of card size).
- *
- * Memoized on (id, version) so parent re-renders (dashboard refresh, hover
- * state, presence updates) never remount the iframe — which is what caused the
- * thumbnails to reload and flicker.
+ * Prototype thumbnail. Prefers a static server-rendered PNG (a one-time snapshot
+ * cached on the backend) so JS-driven prototypes don't keep animating/flickering
+ * in the grid. If the backend can't produce a thumbnail (no headless browser),
+ * it falls back to a live, sandboxed, memoized iframe.
  */
 function PreviewFrameImpl({
   id,
@@ -23,28 +19,36 @@ function PreviewFrameImpl({
   className?: string;
 }) {
   const [loaded, setLoaded] = React.useState(false);
+  const [useIframe, setUseIframe] = React.useState(false);
+
   return (
     <div className={cn("relative overflow-hidden bg-white", className)}>
-      <iframe
-        // Auth cookie rides along on this same-origin request; `sandbox` without
-        // allow-same-origin isolates the rendered document from the app.
-        src={`/api/prototypes/${id}/raw?v=${version}`}
-        title=""
-        aria-hidden
-        tabIndex={-1}
-        scrolling="no"
-        loading="lazy"
-        sandbox="allow-scripts"
-        onLoad={() => setLoaded(true)}
-        className="pointer-events-none absolute left-0 top-0 origin-top-left transition-opacity duration-300"
-        style={{
-          width: "400%",
-          height: "400%",
-          transform: "scale(0.25)",
-          border: 0,
-          opacity: loaded ? 1 : 0,
-        }}
-      />
+      {!useIframe ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/api/prototypes/${id}/thumbnail?v=${version}`}
+          alt=""
+          aria-hidden
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={() => setUseIframe(true)}
+          className="absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-300"
+          style={{ opacity: loaded ? 1 : 0 }}
+        />
+      ) : (
+        <iframe
+          src={`/api/prototypes/${id}/raw?v=${version}`}
+          title=""
+          aria-hidden
+          tabIndex={-1}
+          scrolling="no"
+          loading="lazy"
+          sandbox="allow-scripts"
+          onLoad={() => setLoaded(true)}
+          className="pointer-events-none absolute left-0 top-0 origin-top-left transition-opacity duration-300"
+          style={{ width: "400%", height: "400%", transform: "scale(0.25)", border: 0, opacity: loaded ? 1 : 0 }}
+        />
+      )}
     </div>
   );
 }

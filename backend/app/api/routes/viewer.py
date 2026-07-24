@@ -21,6 +21,7 @@ from app.schemas.viewer import (
 )
 from app.services import comment_service as csvc
 from app.services import prototype_service as psvc
+from app.services import thumbnail_service
 from app.services.storage_service import get_storage
 from app.ws import rooms
 
@@ -77,6 +78,33 @@ async def raw_content(
     except Exception:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Content not found")
     return Response(content=data, media_type="text/html")
+
+
+@router.get("/{prototype_id}/thumbnail")
+async def thumbnail(
+    prototype_id: uuid.UUID,
+    v: int | None = None,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Static PNG snapshot of a version (rendered once, then cached).
+
+    404 when a browser isn't available so the client falls back to the live
+    iframe preview.
+    """
+    proto = await _load(db, user, prototype_id, AccessLevel.viewer)
+    version = v or proto.current_version
+    key = await psvc.content_key(db, proto, version)
+    if key is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Version not found")
+    png = await thumbnail_service.get_or_render(get_storage(), proto.id, version, key)
+    if png is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Thumbnail unavailable")
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @router.get("/{prototype_id}/comments", response_model=list[CommentOut])
