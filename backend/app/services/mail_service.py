@@ -49,7 +49,14 @@ def send_email(to: str, subject: str, body: str) -> None:
             # Don't 500 the request if mail fails — log loudly so it's diagnosable
             # in `docker compose logs api` (auth error, wrong port, blocked, etc.).
             logger.error("SMTP send to %s failed: %s: %s", to, type(exc).__name__, exc)
-            print(f"\n[MAIL ERROR] to={to} | {type(exc).__name__}: {exc}\n", flush=True)
+            # Also surface the message (incl. the OTP) so you're never locked out
+            # while getting SMTP credentials working.
+            print(
+                f"\n[MAIL ERROR] to={to} | {type(exc).__name__}: {exc}\n"
+                f"[FALLBACK — message not sent, shown here so you can still sign in]\n"
+                f"{subject}\n{body}\n",
+                flush=True,
+            )
     else:
         # Console backend — visible in `docker compose logs api`.
         logger.info("EMAIL to=%s subject=%r\n%s", to, subject, body)
