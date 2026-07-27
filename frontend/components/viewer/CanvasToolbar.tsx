@@ -36,9 +36,9 @@ export function CanvasToolbar({ onFullscreen }: { onFullscreen: () => void }) {
         <Home size={16} />
       </button>
 
-      <div className="flex flex-1 items-center justify-center gap-2">
-        <span className="font-medium text-text-body">{proto?.name}</span>
-        <span className="rounded-full border border-brand-600/40 bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-600">v{version}</span>
+      <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+        <span className="truncate font-medium text-text-body">{proto?.name}</span>
+        <span className="shrink-0 rounded-full border border-brand-600/40 bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-600">v{version}</span>
       </div>
 
       <div className="flex items-center gap-1 rounded-control border border-border p-0.5">
@@ -53,14 +53,14 @@ export function CanvasToolbar({ onFullscreen }: { onFullscreen: () => void }) {
         <button onClick={zoomIn} title="Zoom in" className="lp-iconbtn flex h-6 w-6 items-center justify-center rounded text-text-muted hover:bg-[var(--surface-subtle)] hover:text-text-strong"><Plus size={14} /></button>
       </div>
 
-      <span className="font-mono text-xs text-text-faint">{DEVICE_WIDTH[device]} px</span>
+      <span className="hidden font-mono text-xs text-text-faint lg:inline">{DEVICE_WIDTH[device]} px</span>
 
       <a href={`/api/prototypes/${id}/raw?v=${version}`} target="_blank" rel="noreferrer" title="Open in new tab"
-        className="lp-iconbtn flex h-8 w-8 items-center justify-center rounded-control text-text-muted hover:text-text-strong">
+        className="lp-iconbtn hidden h-8 w-8 items-center justify-center rounded-control text-text-muted hover:text-text-strong sm:flex">
         <SquareArrowOutUpRight size={15} />
       </a>
       <button onClick={onFullscreen} title="Fullscreen"
-        className="lp-iconbtn flex h-8 w-8 items-center justify-center rounded-control text-text-muted hover:text-text-strong">
+        className="lp-iconbtn hidden h-8 w-8 items-center justify-center rounded-control text-text-muted hover:text-text-strong sm:flex">
         <Maximize size={15} />
       </button>
     </div>

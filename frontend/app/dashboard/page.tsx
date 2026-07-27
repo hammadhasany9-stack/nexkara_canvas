@@ -62,7 +62,7 @@ export default function DashboardPage() {
         <main className="min-w-0 flex-1">
           <Hero />
 
-          <div className="px-6 py-8 lg:px-8">
+          <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-text-strong">{title}</h2>
@@ -96,23 +96,25 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="overflow-hidden rounded-[14px] border border-border bg-surface">
-                <div
-                  className={cn(
-                    "grid items-center gap-3 border-b border-border bg-surface-subtle px-[18px] py-[11px] font-mono text-[0.58rem] uppercase tracking-[0.12em] text-text-faint",
-                    ROW_COLS,
-                  )}
-                >
-                  <span>Name</span>
-                  <span>Version</span>
-                  <span>Comments</span>
-                  <span>Last edited</span>
-                  <span>Users</span>
-                  <span className="text-right">Actions</span>
+              <div className="overflow-x-auto rounded-[14px] border border-border bg-surface">
+                <div className="min-w-[720px]">
+                  <div
+                    className={cn(
+                      "grid items-center gap-3 border-b border-border bg-surface-subtle px-[18px] py-[11px] font-mono text-[0.58rem] uppercase tracking-[0.12em] text-text-faint",
+                      ROW_COLS,
+                    )}
+                  >
+                    <span>Name</span>
+                    <span>Version</span>
+                    <span>Comments</span>
+                    <span>Last edited</span>
+                    <span>Users</span>
+                    <span className="text-right">Actions</span>
+                  </div>
+                  {shown.map((p) => (
+                    <PrototypeRow key={p.id} p={p} />
+                  ))}
                 </div>
-                {shown.map((p) => (
-                  <PrototypeRow key={p.id} p={p} />
-                ))}
               </div>
             )}
           </div>

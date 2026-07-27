@@ -1,19 +1,26 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Menu, Settings } from "lucide-react";
 import { useDashboard } from "@/store/useDashboard";
 import { Logo } from "@/components/auth/Logo";
 import { ThemeToggle } from "@/components/auth/ThemeToggle";
 import { initialsOf } from "@/lib/format";
 
 export function Topbar() {
-  const { me, openSettings } = useDashboard();
+  const { me, openSettings, toggleMobileNav } = useDashboard();
 
   return (
-    <header className="sticky top-0 z-30 flex h-[72px] items-center gap-3 border-b border-border bg-[var(--surface)]/90 px-6 backdrop-blur">
+    <header className="sticky top-0 z-30 flex h-[72px] items-center gap-3 border-b border-border bg-[var(--surface)]/90 px-4 backdrop-blur sm:px-6">
+      <button
+        onClick={toggleMobileNav}
+        aria-label="Open menu"
+        className="lp-iconbtn flex h-9 w-9 items-center justify-center rounded-control text-text-muted hover:bg-[var(--surface-subtle)] hover:text-text-strong md:hidden"
+      >
+        <Menu size={20} />
+      </button>
       <Logo />
-      <span className="mx-1 h-5 w-px bg-border" />
-      <span className="text-[15px] font-semibold text-text-muted">Canvas</span>
+      <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+      <span className="hidden text-[15px] font-semibold text-text-muted sm:block">Canvas</span>
 
       <div className="flex-1" />
 

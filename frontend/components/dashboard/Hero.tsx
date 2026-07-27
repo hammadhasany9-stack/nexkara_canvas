@@ -11,7 +11,7 @@ export function Hero() {
   const collaborators = Math.max(people.size, 1);
 
   return (
-    <section className="relative overflow-hidden border-b border-border px-6 py-14 lg:py-16">
+    <section className="relative overflow-hidden border-b border-border px-4 py-10 sm:px-6 sm:py-14 lg:py-16">
       {/* dotted texture + soft brand glow */}
       <div
         aria-hidden
@@ -36,7 +36,7 @@ export function Hero() {
         <h1
           className="text-text-strong"
           style={{
-            fontSize: "3.1rem",
+            fontSize: "clamp(2rem, 8vw, 3.1rem)",
             lineHeight: 1.05,
             fontWeight: 800,
             letterSpacing: "-0.035em",
@@ -45,10 +45,10 @@ export function Hero() {
         >
           Welcome to Canvas
         </h1>
-        <h2 className="mt-3 text-text-body" style={{ fontSize: "1.5rem", fontWeight: 600, letterSpacing: "-0.015em" }}>
+        <h2 className="mt-3 text-text-body" style={{ fontSize: "clamp(1.15rem, 4.5vw, 1.5rem)", fontWeight: 600, letterSpacing: "-0.015em" }}>
           Your collaboration pro
         </h2>
-        <p className="mt-3 text-text-muted" style={{ fontSize: "1.02rem", lineHeight: 1.5, maxWidth: "42ch" }}>
+        <p className="mt-3 text-text-muted" style={{ fontSize: "clamp(0.92rem, 3vw, 1.02rem)", lineHeight: 1.5, maxWidth: "42ch" }}>
           Upload a prototype, gather comments in context, and ship the next version together.
         </p>
 
@@ -70,7 +70,7 @@ export function Hero() {
         </div>
 
         {/* stats */}
-        <div className="mt-6 flex items-center gap-[22px] font-mono text-[0.64rem] uppercase tracking-[0.08em] text-text-faint">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-[22px] gap-y-2 font-mono text-[0.64rem] uppercase tracking-[0.08em] text-text-faint">
           <span>{counts.home} prototypes</span>
           <Dot />
           <span>{collaborators} collaborators</span>

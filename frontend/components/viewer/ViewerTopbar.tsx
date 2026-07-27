@@ -14,10 +14,10 @@ export function ViewerTopbar() {
   const online = Math.max(1, onlineCount);
 
   return (
-    <header className="flex h-[72px] shrink-0 items-center gap-3 border-b border-border bg-[var(--surface)]/90 px-6 backdrop-blur">
+    <header className="flex h-[72px] shrink-0 items-center gap-2 border-b border-border bg-[var(--surface)]/90 px-4 backdrop-blur sm:gap-3 sm:px-6">
       <Logo />
-      <span className="mx-1 h-5 w-px bg-border" />
-      <span className="text-[15px] font-semibold text-text-muted">Canvas</span>
+      <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+      <span className="hidden text-[15px] font-semibold text-text-muted sm:block">Canvas</span>
       <div className="flex-1" />
 
       <div className="hidden shrink-0 items-center gap-2 sm:flex">
@@ -38,8 +38,8 @@ export function ViewerTopbar() {
       <ThemeToggle />
 
       {canUpload && (
-        <button onClick={openUpload} className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-control bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
-          <Upload size={16} /> Upload Version
+        <button onClick={openUpload} title="Upload Version" className="lp-press flex shrink-0 items-center gap-2 whitespace-nowrap rounded-control bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 sm:px-4">
+          <Upload size={16} /> <span className="hidden sm:inline">Upload Version</span>
         </button>
       )}
 

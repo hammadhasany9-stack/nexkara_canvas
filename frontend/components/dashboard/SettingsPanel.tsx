@@ -63,16 +63,26 @@ export function SettingsPanel() {
 
       {/* main */}
       <div className="flex-1 overflow-y-auto">
-        <div className="flex items-center gap-3 border-b border-border px-6 py-5">
+        <div className="flex items-center gap-3 border-b border-border px-4 py-4 sm:px-6 sm:py-5">
           <button onClick={closeSettings} className="lp-iconbtn flex h-9 w-9 items-center justify-center rounded-control text-text-muted hover:text-text-strong">
             <ChevronLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-text-strong">Settings</h1>
+            <h1 className="text-lg font-bold text-text-strong sm:text-xl">Settings</h1>
             <p className="text-sm text-text-muted">Account, security &amp; access control</p>
           </div>
         </div>
-        <div className="p-6 lg:p-10">
+        {/* Mobile tab bar (the left rail is hidden below md) */}
+        <nav className="flex gap-1 overflow-x-auto border-b border-border px-3 py-2 md:hidden">
+          {nav.map(({ id, label, icon: Icon }) => (
+            <button key={id} onClick={() => openSettings(id)}
+              className={cn("lp-press flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
+                settingsTab === id ? "bg-brand-100 text-brand-700" : "text-text-muted hover:bg-[var(--surface-subtle)]")}>
+              <Icon size={15} /> {label}
+            </button>
+          ))}
+        </nav>
+        <div className="p-4 sm:p-6 lg:p-10">
           {settingsTab === "profile" && <ProfileTab />}
           {settingsTab === "password" && <PasswordTab />}
           {settingsTab === "users" && isAdmin && <UsersTab />}

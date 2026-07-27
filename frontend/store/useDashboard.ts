@@ -28,6 +28,7 @@ interface DashboardState {
   notifOpen: boolean;
   renameTarget: Prototype | null;
   confirm: { title: string; body: string; label: string; onConfirm: () => void } | null;
+  mobileNavOpen: boolean;
 
   setView: (v: "grid" | "list") => void;
   setSection: (s: Section) => void;
@@ -49,6 +50,8 @@ interface DashboardState {
   closeRename: () => void;
   askConfirm: (c: DashboardState["confirm"]) => void;
   closeConfirm: () => void;
+  toggleMobileNav: () => void;
+  closeMobileNav: () => void;
 }
 
 export const useDashboard = create<DashboardState>((set, get) => ({
@@ -70,15 +73,16 @@ export const useDashboard = create<DashboardState>((set, get) => ({
   notifOpen: false,
   renameTarget: null,
   confirm: null,
+  mobileNavOpen: false,
 
   setView: (view) => set({ view }),
   setSection: (section) => {
-    set({ section, personFilter: null });
+    set({ section, personFilter: null, mobileNavOpen: false });
     get().refresh();
   },
   setPersonFilter: (personFilter) => {
     // Show every prototype this collaborator is on (shared with them or by them).
-    set({ personFilter, section: personFilter ? "home" : get().section, query: "" });
+    set({ personFilter, section: personFilter ? "home" : get().section, query: "", mobileNavOpen: false });
     get().refresh();
   },
   setQuery: (query) => {
@@ -127,6 +131,8 @@ export const useDashboard = create<DashboardState>((set, get) => ({
   closeRename: () => set({ renameTarget: null }),
   askConfirm: (confirm) => set({ confirm }),
   closeConfirm: () => set({ confirm: null }),
+  toggleMobileNav: () => set((s) => ({ mobileNavOpen: !s.mobileNavOpen })),
+  closeMobileNav: () => set({ mobileNavOpen: false }),
 }));
 
 export type { AdminUser };

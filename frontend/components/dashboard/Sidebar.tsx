@@ -17,7 +17,7 @@ const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
 ];
 
 export function Sidebar() {
-  const { section, setSection, counts, unread, toggleNotif, personFilter, setPersonFilter } = useDashboard();
+  const { section, setSection, counts, unread, toggleNotif, personFilter, setPersonFilter, mobileNavOpen, closeMobileNav } = useDashboard();
   const [people, setPeople] = React.useState<Person[]>([]);
   const notifRef = React.useRef<HTMLButtonElement>(null);
 
@@ -26,7 +26,23 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className="hidden w-[248px] shrink-0 flex-col gap-1 border-r border-border bg-[var(--surface)]/40 px-3 py-4 md:flex">
+    <>
+    {/* Mobile overlay */}
+    <div
+      onClick={closeMobileNav}
+      className={cn(
+        "fixed inset-0 z-40 bg-black/40 transition-opacity md:hidden",
+        mobileNavOpen ? "opacity-100" : "pointer-events-none opacity-0",
+      )}
+    />
+    <aside
+      className={cn(
+        "flex w-[248px] shrink-0 flex-col gap-1 border-r border-border bg-[var(--surface)] px-3 py-4",
+        "max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:shadow-2xl max-md:transition-transform max-md:duration-200",
+        mobileNavOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full",
+        "md:static md:translate-x-0 md:bg-[var(--surface)]/40",
+      )}
+    >
       <nav className="grid gap-0.5">
         {NAV.map(({ id, label, icon: Icon }) => {
           const active = section === id;
@@ -91,5 +107,6 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

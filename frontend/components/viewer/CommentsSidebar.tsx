@@ -21,7 +21,7 @@ export function CommentsSidebar() {
       : "Resolved comments for this version will collect here.";
 
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col border-l border-border bg-[var(--surface)]/50">
+    <aside className="flex w-[340px] shrink-0 flex-col border-l border-border bg-[var(--surface)] max-sm:absolute max-sm:inset-y-0 max-sm:right-0 max-sm:z-30 max-sm:w-[86vw] max-sm:max-w-[340px] max-sm:shadow-2xl sm:bg-[var(--surface)]/50">
       <div className="px-5 pt-5">
         <div className="mb-3.5 flex items-baseline justify-between">
           <h2 className="text-[17px] font-medium text-text-strong">Comments</h2>
