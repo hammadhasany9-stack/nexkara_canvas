@@ -24,14 +24,22 @@ const TITLES: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const { view, setView, section, query, prototypes, loading, me, loadMe, refresh, loadNotifications, openSettings, personFilter, setPersonFilter } =
+  const { view, setView, section, query, prototypes, loading, me, loadMe, refresh, loadNotifications, openSettings, closeSettings, personFilter, setPersonFilter } =
     useDashboard();
 
   React.useEffect(() => {
     loadMe();
     refresh();
     loadNotifications();
-    if (new URLSearchParams(window.location.search).get("settings")) openSettings("profile");
+    // Open Settings only when explicitly requested via ?settings; otherwise make
+    // sure any lingering (persisted) settings panel is closed so a normal visit
+    // — Home button, fresh login — lands on the dashboard, not Settings.
+    if (new URLSearchParams(window.location.search).get("settings")) {
+      openSettings("profile");
+      window.history.replaceState(null, "", "/dashboard"); // clean the param
+    } else {
+      closeSettings();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
